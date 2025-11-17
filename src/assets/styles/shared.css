@@ -1,0 +1,304 @@
+/* 共用的 CSS 檔案 */
+
+/* ----黑色按鈕樣式---- */
+.shared-divination-btn{
+  padding: 0.8rem 3rem;
+  font-size: 1rem;
+  color: white;
+  background-color: black; /* 黑色背景 */
+  border: none;
+  border-radius: 50px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+  cursor: pointer;
+  transition: transform 0.3s, box-shadow 0.3s;
+  margin-right: 20px;
+  margin-bottom: 20px;
+}
+.shared-divination-btn:hover {
+  transform: scale(1.05);
+  box-shadow: 0 4px 30px rgba(184, 184, 184, 0.8);
+}
+
+/* ----漢堡選單---- */
+.shared-hamburger-menu {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 300px; /* 選單寬度 */
+  height: 100%;
+  background-color: #f7f7f7; /* 淺灰色背景 */
+  box-shadow: 2px 0 10px rgba(0, 0, 0, 0.3);
+  z-index: 1000; /* 確保在最上層 */
+  transform: translateX(-100%); /* 初始時隱藏在左側 */
+  transition: transform 0.3s ease-in-out;
+  display: flex;
+  flex-direction: column;
+}
+
+.shared-hamburger-menu.is-open {
+  transform: translateX(0); /* 開啟時顯示 */
+}
+
+.shared-menu-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5); /* 半透明遮罩 */
+  z-index: 999; 
+}
+
+.shared-menu-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px;
+  border-bottom: 1px solid #ddd;
+}
+
+.shared-menu-title {
+  font-size: 20px;
+  font-weight: 600;
+  color: #333;
+}
+
+.shared-menu-close-btn {
+  font-size: 30px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #555;
+  line-height: 1;
+}
+
+.shared-menu-links {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  flex-grow: 1;
+}
+
+.shared-menu-links li {
+  border-bottom: 1px solid #eee;
+}
+
+.shared-menu-links button {
+  width: 100%;
+  padding: 15px 20px;
+  text-align: left;
+  background: none;
+  border: none;
+  font-size: 16px;
+  color: #333;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.shared-menu-links button:hover,
+.shared-menu-links button.is-current {
+  background-color: #e0e0e0; /* Hover 和當前頁面背景色 */
+  font-weight: 600;
+  color: #000;
+}
+
+.shared-menu-icon {
+font-size: 30px; /* 調整大小 */
+    color: #333;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-weight: 900;
+    padding: 0;
+    line-height: 1;
+    z-index: 50;
+}
+
+/* 占卜區 Header區塊 */
+.shared-header {
+    width: 100%;
+    max-width: 1800px; 
+    padding: 20px 50px;
+    box-sizing: border-box;
+  }
+
+  .shared-top {
+    padding: 0 0 5px 0; /* 標題與分隔線的間距 */
+  }
+
+  .shared-logo {
+    font-family: Arial, sans-serif;
+    font-size: 7vw;
+    line-height: 1.2;
+    font-weight: 300;
+    letter-spacing: 0.1em;
+    color: #333;
+    margin: 0;
+    padding: 0;
+    text-align: left;
+  }
+
+  .shared-header-divider {
+      height: 1px;
+      background-color: #aaa; /* 淺灰色線 */
+      width: 100%;
+      margin: 10px 0 0 0; /* 線的位置 */
+  }
+
+  .shared-header-bottom {
+      display: flex;
+      justify-content: space-between; /* 左右元素分隔 */
+      align-items: center;
+      padding: 15px 0 0 0;
+  }
+
+  .shared-menu-icon {
+  font-size: 30px; /* 調整大小 */
+      color: #333;
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-weight: 900;
+      padding: 0;
+      line-height: 1;
+      z-index: 50;
+  }
+
+  /* 右上角「會員資料」和「登出」的容器樣式 */
+  .shared-actions {
+      display: flex;
+      align-items: center;
+  }
+
+  /* "會員資料" 按鈕樣式（有背景按鈕） */
+  .shared-btn-user {
+      text-decoration: none;
+      padding: 10px 20px;
+      font-size: 16px;
+      font-weight: 400;
+      color: white; 
+      background-color: #000; 
+      border-radius: 5px; 
+      margin-right: 25px; /* 與「登出」的間距 */
+      white-space: nowrap; /* 防止換行 */
+  }
+
+  /* "登出" 文字樣式（無背景文字） */
+  .shared-btn-logout {
+      text-decoration: none;
+      font-size: 16px;
+      font-weight: 400;
+      color: #333;
+      padding: 0;
+      white-space: nowrap;
+  }
+
+  @media (max-width: 770px) {
+    .shared-header {
+      max-width: 100%; 
+      padding: 20px 20px;
+    }
+
+    .shared-logo {
+      font-size: 8vw; /* 適度縮小標題字體 */
+      letter-spacing: 0.05em; /* 減少字母間距 */
+    }
+  }
+
+/* 占卜區 Footer區塊 */
+  .shared-footer{
+    background-color: #535353;
+    color: #bbbaba;
+    border-top: 1px solid #ddd;
+    margin-top: 30px;
+    padding-top: 10px;
+    width: 100%;
+  }
+
+  .shared-footer-content {
+    display: flex;
+    justify-content: space-between;
+    max-width: 1200px; 
+    margin: 0 auto;
+    padding: 0 50px;
+    border-bottom: none; 
+  }
+
+  .shared-footer-links h3, .book-footer-social h3 {
+    font-size: 1.2rem;
+    margin-bottom: 15px;
+    color: rgb(219, 219, 219);
+  }
+
+  .shared-footer-links ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  .shared-footer-links li {
+    margin-bottom: 8px;
+  }
+
+  .shared-footer-links a {
+    color: #e9e9e9;
+    text-decoration: none;
+    transition: color 0.3s;
+    font-size: 0.95rem;
+  }
+
+  .shared-footer-links a:hover {
+    color: #b4b4b4;
+  }
+
+  .shared-social-icons {
+    display: flex;
+    gap: 15px;
+  }
+
+  .shared-social-icon {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background-color: #303031; 
+    color: white; 
+    font-weight: bold;
+    text-decoration: none;
+    transition: background-color 0.3s;
+  }
+
+  .shared-footer-bottom {
+    text-align: center;
+    padding: 20px 50px;
+    font-size: 0.85rem;
+    color: #cfcfcf;
+  }
+
+  @media (max-width: 770px) {
+    .shared-footer-content {
+      flex-direction: column; 
+      gap: 20px;
+      align-items: center;
+      text-align: center;
+      padding: 0 20px 30px;
+    }
+
+    .shared-footer-bottom {
+      padding: 20px 20px; 
+    }
+
+    .shared-footer-links ul {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 15px; 
+    }
+    .shared-social-icons {
+      justify-content: center;
+    }
+
+  }
