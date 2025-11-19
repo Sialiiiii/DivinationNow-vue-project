@@ -31,6 +31,15 @@ function goFortuneStickTwo() {
     <!-- Header版位 -->
     <header class="banner">
       <h1 class="main-title">DIVINATION.NOW</h1>
+
+    <div class="auth-section-wrapper">
+      <div class="auth-content">
+        <nav class="auth-buttons">
+          <router-link to="/login" class="login-btn">登入/註冊</router-link>
+        </nav>
+        <p class="login-tip">※ 登入會員可自動記錄每次占卜結果</p>
+      </div>
+    </div>
       
       <div class="banner-image-container">
         <div class="image-placeholder-top">
@@ -38,15 +47,6 @@ function goFortuneStickTwo() {
         </div>
       </div>
     </header>
-
-  <div class="auth-section-wrapper">
-    <div class="auth-content">
-      <nav class="auth-buttons">
-        <router-link to="/login" class="login-btn">登入/註冊</router-link>
-      </nav>
-      <p class="login-tip">※ 登入會員可自動記錄每次占卜結果</p>
-    </div>
-  </div>
 
     <!-- 解答之書版位 -->
     <main class="main-content">
@@ -139,11 +139,10 @@ function goFortuneStickTwo() {
 
 /* -------------------- 容器與基礎設定 -------------------- */
 #app-container {
-display: flex; /* 啟用 Flexbox */
-  flex-direction: column; /* 垂直排列子元素 */
-  background-color: white; /* 畫面背景是白色 */
+display: flex; 
+  flex-direction: column; 
+  background-color: white; 
   color: #1a1a2e;
-  /* min-height: 100vh; */
   font-family: 'Microsoft JhengHei', 'Heiti TC', sans-serif;
   width: 100%;
 }
@@ -152,7 +151,7 @@ display: flex; /* 啟用 Flexbox */
 .banner {
   background-color: white;
   padding-bottom: 30px;
-  /* position: relative;  */
+  position: relative;
   width: 100%;
 }
 
@@ -195,19 +194,20 @@ display: flex; /* 啟用 Flexbox */
 /* 包裹按鈕和提示文字的容器 */
 .auth-content {
   display: flex;
-  flex-direction: column; /* **垂直排列** 子元素 (按鈕在上面，文字在下面) */
-  align-items: center; /* 讓按鈕和文字在水平方向上置中對齊 */
+  flex-direction: column;
+  align-items: center;
 }
 
 /* 登入/註冊按鈕定位 */
 .auth-section-wrapper {
-  width: 100%;
-  padding: 10px 80px;
-  box-sizing: border-box;
-  display: flex;
-  justify-content: flex-end; 
-  margin-top: -30px; 
-  margin-bottom: 30px; 
+  position: absolute;
+  top: 60px;
+  right: 80px;
+  z-index: 20;
+  width: auto; 
+  padding: 0;
+  margin: 0;
+  display: block;
 }
 .auth-buttons {
   z-index: 10;
@@ -288,7 +288,7 @@ display: flex; /* 啟用 Flexbox */
 
 /* 文字靠右的文字間距*/
 .reverse-content .text-content {
-  padding-right: 0;  /* 移除第一組的padding-right: 50px; */
+  padding-right: 0;
   padding-left: 50px;  
 }
 
@@ -302,7 +302,7 @@ display: flex; /* 啟用 Flexbox */
   margin-top: auto; 
   width: 100%;
   background: linear-gradient(to bottom, #e3f5ff, #f9eadf); 
-  color: #333; /* 文字改為深色 */
+  color: #333;
   padding-top: 40px;
 }
 
@@ -312,13 +312,13 @@ display: flex; /* 啟用 Flexbox */
   max-width: 1200px; 
   margin: 0 auto;
   padding: 0 50px 40px; 
-  border-bottom: none; /* 移除白色分隔線 */
+  border-bottom: none;
 }
 
 .footer-links h3, .footer-social h3 {
   font-size: 1.2rem;
   margin-bottom: 15px;
-  color: black; /* 標題改為黑色 */
+  color: black; 
 }
 
 .footer-links ul {
@@ -332,14 +332,14 @@ display: flex; /* 啟用 Flexbox */
 }
 
 .footer-links a {
-  color: #333; /* 連結文字改為深色 */
+  color: #333;
   text-decoration: none;
   transition: color 0.3s;
   font-size: 0.95rem;
 }
 
 .footer-links a:hover {
-  color: #007bff; /* Hover 顏色可選一個活潑的藍色 */
+  color: #007bff;
 }
 
 .social-icons {
@@ -354,15 +354,15 @@ display: flex; /* 啟用 Flexbox */
   width: 30px;
   height: 30px;
   border-radius: 50%;
-  background-color: #89e4ff; /* 亮藍綠色 */
-  color: white; /* 圖標文字改為白色 */
+  background-color: #89e4ff;
+  color: white;
   font-weight: bold;
   text-decoration: none;
   transition: background-color 0.3s;
 }
 
 .social-icon:hover {
-  background-color: #4ed2f5; /* Hover 時顏色變深 */
+  background-color: #4ed2f5;
 }
 
 .footer-bottom {
@@ -376,73 +376,84 @@ display: flex; /* 啟用 Flexbox */
 /* ============================== RWD ============================== */
 
 @media (max-width: 1200px) {
-/* 1. 調整整體邊距 */
+/* 調整整體邊距 */
   .main-title {
-     font-size: 4rem;
-      padding: 20px 40px 0; /* 縮小左右邊距 */
+    font-size: 4rem;
+    padding: 20px 40px 0;
   }
-
   .banner-image-container,
   .auth-section-wrapper {
-    padding: 0 40px; /* 統一邊距 */
+    padding: 0 40px;
   }
 
   /* 針對登入/註冊按鈕區塊的修正 */
     .auth-section-wrapper {
-        margin-top: -15px; /* 從 -30px 調整為 -15px 或直接設為 0 */
-        margin-bottom: 30px; 
+        top: 40px;
+        right: 40px;
+        margin-bottom: 30px;
     }
 
   /* 調整內容區塊的圖片和文字寬度 */
   .main-content {
-    margin: 60px 40px; /* 統一邊距，上下間距稍大 */
+    margin: 60px 40px;
   }
 
-  /* 2. 核心修正：調整文字大小 */
+  /* 調整文字大小 */
   .title-section h1 {
-    font-size: 2.5rem; /* 標題字體在中螢幕上適度縮小 */
+    font-size: 2.5rem;
   }
 
   .subtitle {
-    font-size: 1.05rem; /* 內文字體適度縮小 */
-    margin-bottom: 30px; /* 縮小與按鈕的間距 */
+    font-size: 1.05rem;
+    margin-bottom: 30px;
   }
 
-  /* 3. 調整圖片和文字容器間距 */
+  /* 調整圖片和文字容器間距 */
   .text-content {
-    padding-right: 30px; /* 縮小與圖片的間距 */
-    /* 允許文字內容佔用更多空間，但仍保持 max-width */
-    flex: 1; /* 確保在 flex 容器中能彈性伸展 */
-    max-width: 55%; /* 讓文字內容在中螢幕下佔據約一半多一點的空間 */
+    padding-right: 30px;
+    flex: 1;
+    max-width: 55%; 
   }
 
   .reverse-content .text-content {
-    padding-left: 30px; /* 縮小與圖片的間距 */
+    padding-left: 30px; 
   }
 
-  /* 4. 調整圖片大小 */
+  /* 調整圖片大小 */
   .image-placeholder-bottom {
-    width: 400px; /* 圖片進一步縮小 */
+    width: 400px; 
     height: 300px;
   }
 
-  /* 5. 調整 Footer 置中寬度 */
+  /* 調整 Footer 置中寬度 */
   .footer-content {
-    max-width: 960px; /* 調整最大寬度 */
-    padding: 0 40px 40px; /* 統一邊距 */
+    max-width: 960px;
+    padding: 0 40px 40px;
+  }
+}
+
+
+@media (max-width: 978px) {
+  .main-title {
+    font-size: 3rem; 
+    padding: 20px 220px 0 40px !important; 
+  }
+  
+  .auth-section-wrapper {
+    top: 20px; 
+    right: -25px; 
   }
 }
 
 @media (max-width: 768px) {
-  /* 整體邊距和標題 */
   .main-title {
-    font-size: 2.5rem; /* 手機上標題變小 */
-    padding: 20px 20px 0; /* 縮小左右邊距 */
+    font-size: 2.5rem;
+    padding: 20px 20px 0;
   }
   
-  /* 圖片容器和按鈕的邊距也縮小 */
   .banner-image-container {
     padding: 0 20px;
+    margin-bottom: 30px;
   }
   
   .auth-buttons {
@@ -451,40 +462,41 @@ display: flex; /* 啟用 Flexbox */
   }
 
   .login-tip {
-    font-size: 0.75rem; /* 在手機上可能需要更小 */
+    font-size: 0.75rem;
   }
 
   .auth-section-wrapper {
-    padding: 10px 20px; /* 縮小左右邊距 */
-    /* 保持 display: flex; justify-content: flex-end; */
+    top: 320px;
+    right: 20px;
+    padding: 0;
   }
 
-  /* 2. 內容區塊垂直堆疊 */
+  /* 內容區塊垂直堆疊 */
   .main-content {
-    flex-direction: column; /* 讓內容由橫向改為縱向堆疊 */
-    margin: 30px 20px; /* 移除左右邊距，讓內容貼邊 */
-    align-items: center; /* 讓內容置中 */
+    flex-direction: column; 
+    margin: 30px 20px;
+    align-items: center;
   }
 
-  /* 3. 調整圖片和文字區塊的寬度 */
+  /* 調整圖片和文字區塊的寬度 */
   .text-content {
     width: 100%;
-    max-width: 100%; /* 移除文字寬度限制 */
-    padding-right: 0; /* 移除右側 padding */
-    order: 2; /* 讓文字在手機上放在圖片下方 */
+    max-width: 100%;
+    padding-right: 0;
+    order: 2;
   }
   
   .title-section h1 {
-    font-size: 2rem; /* 手機上標題變小 */
+    font-size: 2rem;
   }
 
   .subtitle {
-    font-size: 1rem; /* 內文變小 */
+    font-size: 1rem; 
   }
 
   .image-placeholder-top {
     height: 250px; 
-    display: flex; /* 確保內部圖片可以置中 */
+    display: flex;
     justify-content: center;
     align-items: center;
   }
@@ -502,9 +514,8 @@ display: flex; /* 啟用 Flexbox */
     margin-bottom: 30px;
   }
 
-  /* 4. 修正交錯內容區塊的順序 */
+  /* 交錯內容區塊的順序 */
   .main-content.reverse-content {
-    /* 在手機上，讓所有內容都恢復到 圖片(1) -> 文字(2) 的順序 */
     flex-direction: column; 
   }
 
@@ -519,9 +530,9 @@ display: flex; /* 啟用 Flexbox */
 
   /* 5. Footer 調整 (垂直排列) */
   .footer-content {
-    flex-direction: column; /* 將連結和社群媒體垂直堆疊 */
-    padding: 0 20px 30px; /* 縮小內邊距 */
-    gap: 30px; /* 增加上下間距 */
+    flex-direction: column;
+    padding: 0 20px 30px;
+    gap: 30px;
   }
 
   .footer-links, .footer-social {

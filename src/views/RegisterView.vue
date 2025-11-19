@@ -46,10 +46,13 @@
             <label for="careerEmployed">就業中</label>
             
             <input type="radio" id="careerUnemployed" value="待業" v-model="careerStatus" name="careerStatus" required>
-            <label for="careerUnemployed">待業</label>
+            <label for="careerUnemployed">職涯探索中</label>
             
             <input type="radio" id="careerStudent" value="學生" v-model="careerStatus" name="careerStatus" required>
             <label for="careerStudent">學生</label>
+
+            <input type="radio" id="careerStudent" value="學生" v-model="careerStatus" name="careerStatus" required>
+            <label for="careerStudent">其他</label>
           </div>
         </div>
 
