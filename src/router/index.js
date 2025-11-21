@@ -59,6 +59,11 @@ const router = createRouter({
       path: '/FortuneStickTwoDivination',
       name: 'FortuneStickTwoDivination',
       component: () => import('../views/FortuneStickTwoDivinationView.vue')
+    },
+    {
+      path: '/RegisterView',
+      name: 'RegisterView',
+      component: () => import('../views/RegisterView.vue')
     }
   ]
 })
