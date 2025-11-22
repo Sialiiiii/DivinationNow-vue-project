@@ -2,6 +2,7 @@ import { createRouter, createWebHistory } from 'vue-router'
 import HomeView from '../views/HomeView.vue'
 import LoginView from '../views/LoginView.vue'
 import RegisterView from '../views/RegisterView.vue'
+import MemberProfileView from '../views/MemberProfileView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -36,6 +37,11 @@ const router = createRouter({
       component: RegisterView
     },
     {
+      path: '/member-profile',
+      name: 'member-profile',
+      component: MemberProfileView
+    },
+    {
       path: '/TheBookOfAnswersDivination',
       name: 'TheBookOfAnswersDivination',
       component: () => import('../views/TheBookOfAnswersDivinationView.vue')
@@ -59,11 +65,6 @@ const router = createRouter({
       path: '/FortuneStickTwoDivination',
       name: 'FortuneStickTwoDivination',
       component: () => import('../views/FortuneStickTwoDivinationView.vue')
-    },
-    {
-      path: '/RegisterView',
-      name: 'RegisterView',
-      component: () => import('../views/RegisterView.vue')
     }
   ]
 })

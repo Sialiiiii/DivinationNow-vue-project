@@ -1,76 +1,71 @@
 <script setup>
-  import { ref } from 'vue';
-  import axios from 'axios';
-  import { useRouter } from 'vue-router';
+import { ref } from 'vue';
+import { register } from '@/services/api';
+import { useRouter } from 'vue-router';
 
-  const email = ref('');
-  const password = ref('');
-  const confirmPassword = ref('');
-  const fullName = ref('');
-  const gender = ref(''); 
-  const birthday = ref(''); 
-  const careerStatus = ref(''); 
-  const relationshipStatus = ref(''); 
-  const registerError = ref(''); //註冊成功
-  const registerSuccess = ref(''); //註冊失敗
+const router = useRouter();
+const email = ref('');
+const password = ref('');
+const confirmPassword = ref('');
+const fullName = ref('');
+const gender = ref('');
+const birthday = ref('');
+const careerStatus = ref('');
+const relationshipStatus = ref('');
+const registerError = ref('');
+const registerSuccess = ref('');
 
-  const handleRegister = async() => {
-    registerError.value = ''; // 清除上次的錯誤訊息
-    registerSuccess.value = ''; // 清除成功訊息
-  
+const handleRegister = async () => {
+  registerError.value = '';
+  registerSuccess.value = '';
 
-    if (password.value !== confirmPassword.value) {
-      registerError.value = '密碼與確認密碼不一致！';
-      return;
-    }
-    
-    const requiredFields = [email.value, password.value, confirmPassword.value, fullName.value, gender.value, birthday.value, careerStatus.value, relationshipStatus.value];
-    if (requiredFields.some(field => !field)) {
-      registerError.value = '請填寫所有必填欄位！';
-      return;
-    }
+  if (password.value !== confirmPassword.value) {
+    registerError.value = '密碼與確認密碼不一致！';
+    return;
+  }
 
-    try {
-      const userData = {
-        email: email.value,
-        password: password.value,
-        confirmPassword: confirmPassword.value,
-        fullName: fullName.value,
-        gender: gender.value,
-        birthday: birthday.value,
-        careerStatus: careerStatus.value,
-        relationshipStatus: relationshipStatus.value
-      };
+  const requiredFields = [
+    email.value, password.value, confirmPassword.value,
+    fullName.value, gender.value, birthday.value,
+    careerStatus.value, relationshipStatus.value
+  ];
 
-    //發送 axios POST 請求
-    const response = await axios.post('/api/register', userData);
+  if (requiredFields.some(field => !field)) {
+    registerError.value = '請填寫所有必填欄位！';
+    return;
+  }
 
-    console.log('Register successful:', response.data);
+  try {
+    const userData = {
+      email: email.value,
+      passwordHash: password.value,
+      confirmPassword: confirmPassword.value,
+      fullName: fullName.value,
+      gender: gender.value,
+      birthday: birthday.value,
+      careerStatus: careerStatus.value,
+      relationshipStatus: relationshipStatus.value
+    };
+
+    const response = await register(userData);
+    console.log('Register successful:', response);
     registerSuccess.value = '註冊成功！您可以登入開始心靈旅行了。';
 
-    setTimeout(() => {
-      router.push('/login');
-    }, 1500);
-
+    setTimeout(() => router.push('/login'), 1500);
   } catch (error) {
-      console.error('Register failed:', error);
-
-      if (error.response) {
-          const status = error.response.status;
-          
-          if (status === 409) {
-              registerError.value = '註冊失敗：此 Email 帳號已被使用囉！';
-          } else if (status === 400) {
-              registerError.value = error.response.data.message || '註冊失敗：請求資料格式不正確。';
-          } else {
-              registerError.value = `註冊失敗：伺服器錯誤 (${status})。`;
-          }
-      } else {
-          registerError.value = '網路連線錯誤，請檢查您的網路或稍後再試。';
-      }
+    console.error('Register failed:', error);
+    if (error.response) {
+      const status = error.response.status;
+      if (status === 409) registerError.value = '此 Email 已被使用';
+      else if (status === 400) registerError.value = '請求資料格式不正確';
+      else registerError.value = `伺服器錯誤 (${status})`;
+    } else {
+      registerError.value = '網路錯誤，請稍後再試';
+    }
   }
 };
 </script>
+
 
 
 
@@ -127,8 +122,8 @@
             <input type="radio" id="careerStudent" value="學生" v-model="careerStatus" name="careerStatus" required>
             <label for="careerStudent">學生</label>
 
-            <input type="radio" id="careerStudent" value="學生" v-model="careerStatus" name="careerStatus" required>
-            <label for="careerStudent">其他</label>
+            <input type="radio" id="careerOther" value="其他" v-model="careerStatus" name="careerStatus" required>
+            <label for="careerOther">其他</label>
           </div>
         </div>
 

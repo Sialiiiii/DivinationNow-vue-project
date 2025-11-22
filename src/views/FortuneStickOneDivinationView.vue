@@ -31,18 +31,30 @@ const isDrawStickPhase = computed(() => divinationStep.value === 'draw_stick');
 
 
 // --- 漢堡選單 ---
-const toggleMenu = () => {
-  isMenuOpen.value = !isMenuOpen.value;
-};
-
-const goFortuneStickOne = () => {
-  isMenuOpen.value = false;
-  resetToInstruction(); 
-}
-const goFortuneStickTwo = () => {
-    isMenuOpen.value = false;
-    router.push('/FortuneStickTwoDivination');
-}
+const goHome = () => {
+      isMenuOpen.value = false; // 關閉選單
+      router.push('/');
+  }
+  const goBookOfAnswers = () => {
+      isMenuOpen.value = false;
+      router.push('/TheBookOfAnswersDivination'); 
+  }
+  const goRunesOne = () => {
+      isMenuOpen.value = false;
+      router.push('/RunesOneDivination');
+  }
+  const goRunesTwo = () => {
+      isMenuOpen.value = false;
+      router.push('/RunesTwoDivination');
+  }
+  const goFortuneStickOne = () => {
+      isMenuOpen.value = false;
+      resetToInstruction();
+  }
+  const goFortuneStickTwo = () => {
+      isMenuOpen.value = false;
+      router.push('/FortuneStickTwoDivination');
+  }
 
 
 // --- 邏輯函數 ---

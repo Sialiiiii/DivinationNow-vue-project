@@ -1,147 +1,178 @@
 <script setup>
 import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
+import axios from 'axios';
 
-import UserProfileCard from './UserProfileCard.vue';
-import DivinationHistoryTable from './DivinationHistoryTable.vue';
+import UserProfileCard from '../components/Member/UserProfileCard.vue';
+import DivinationHistoryTable from '../components/Member/DivinationHistoryTable.vue';
 
 const router = useRouter();
 const isMenuOpen = ref(false); 
 
 // 用於儲存後端獲取的真實資料
 const userData = ref(null); 
-const historyRecords = ref([]); 
+// const historyRecords = ref([]); 
 
-// 2. 共用 API 輔助函數 (確保請求帶有 Token)
-/**
- * 發送帶有 Token 的 fetch 請求的輔助函數
- * @param {string} url - API 終端點
- * @param {Object} options - fetch 請求的配置 (method, body 等)
- * @returns {Promise<Object>} API 回傳的 JSON 資料
- */
-const authFetch = async (url, options = {}) => {
+// 創建專用的 axios 實例（避免污染全域）
+const apiClient = axios.create({
+  baseURL: '/api',
+  timeout: 10000
+});
+
+// 請求攔截器：自動添加 Token
+apiClient.interceptors.request.use(
+  (config) => {
     const token = localStorage.getItem('userToken');
-
-    if (!token) {
-        throw new Error('No Auth Token'); 
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
     }
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
 
-    const headers = {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`, // 帶上 Token
-        ...options.headers
-    };
-    
-    const response = await fetch(url, { ...options, headers });
-
-    if (response.status === 401) {
-        throw new Error('Unauthorized');
+// 響應攔截器：統一處理 401 錯誤
+apiClient.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      alert('您的登入狀態已失效或無效，請重新登入。');
+      handleLogout();
     }
-    
-    if (!response.ok) {
-        // 嘗試解析 JSON 獲取詳細錯誤信息
-        const errorData = await response.json();
-        throw new Error(errorData.message || `API 錯誤：${response.status}`);
-    }
-
-    return response.json(); 
-};
+    return Promise.reject(error);
+  }
+);
 
 // 登出與導航邏輯
 const handleLogout = () => {
-    localStorage.removeItem('userToken');  // 清除前端儲存的Token
-    console.log('User logged out, navigating to login.');
-    router.push('/login');
+  localStorage.removeItem('userToken');
+  console.log('User logged out, navigating to login.');
+  router.push('/login');
 };
 
 const toggleMenu = () => {
-    isMenuOpen.value = !isMenuOpen.value;
+  isMenuOpen.value = !isMenuOpen.value;
 };
 
-// 由於 resetToInstruction 未定義，先假設它是一個簡單的路由跳轉
 const resetToInstruction = () => {
-    router.push('/'); 
+  router.push('/'); 
 };
 
 // 漢堡選單導航方法 
-const goHome = () => { isMenuOpen.value = false; router.push('/'); }
-const goBookOfAnswers = () => { isMenuOpen.value = false; resetToInstruction(); }
-const goRunesOne = () => { isMenuOpen.value = false; router.push('/RunesOneDivination'); }
-const goRunesTwo = () => { isMenuOpen.value = false; router.push('/RunesTwoDivination'); }
-const goFortuneStickOne = () => { isMenuOpen.value = false; router.push('/FortuneStickOneDivination'); }
-const goFortuneStickTwo = () => { isMenuOpen.value = false; router.push('/FortuneStickTwoDivination'); }
-
-
-// 資料獲取與保護 (在 onMounted 中調用)
-const fetchMemberData = async () => {
-    try {
-        // 使用 authFetch 請求用戶資料
-        const userPromise = authFetch('/api/user/profile'); 
-        // 使用 authFetch 請求歷史紀錄
-        const recordsPromise = authFetch('/api/divination/history'); 
-
-        const [userRes, recordsRes] = await Promise.all([userPromise, recordsPromise]);
-
-        // 更新前端狀態
-        userData.value = userRes;
-        historyRecords.value = recordsRes.records || []; // 確保是陣列
-        console.log('Member data loaded successfully.');
-
-    } catch (error) {
-        console.error('Error fetching member data:', error);
-        
-        if (error.message === 'No Auth Token' || error.message === 'Unauthorized') {
-            alert('您的登入狀態已失效或無效，請重新登入。');
-            handleLogout(); // Token 無效，強制登出
-        } else {
-            alert(`載入會員資料失敗: ${error.message}`);
-            // 可選：載入失敗時，也強制登出
-            // handleLogout();
-        }
-    }
+const goHome = () => { 
+  isMenuOpen.value = false; 
+  router.push('/'); 
+};
+const goBookOfAnswers = () => { 
+  isMenuOpen.value = false; 
+  resetToInstruction(); 
+};
+const goRunesOne = () => { 
+  isMenuOpen.value = false; 
+  router.push('/RunesOneDivination'); 
+};
+const goRunesTwo = () => { 
+  isMenuOpen.value = false; 
+  router.push('/RunesTwoDivination'); 
+};
+const goFortuneStickOne = () => { 
+  isMenuOpen.value = false; 
+  router.push('/FortuneStickOneDivination'); 
+};
+const goFortuneStickTwo = () => { 
+  isMenuOpen.value = false; 
+  router.push('/FortuneStickTwoDivination'); 
 };
 
-// 處理子組件發出的更新事件 (PUT 請求)
-const handleUpdateQuestion = async (updatedRecord) => {
-    try {
-        const apiUrl = `/api/divination/history/${updatedRecord.id}`;
-        
-        // 使用 authFetch 發送 PUT 請求更新問題
-        await authFetch(apiUrl, {
-            method: 'PUT',
-            body: JSON.stringify({
-                question: updatedRecord.question
-            })
-        });
-
-        // 更新成功：同步更新前端的資料狀態
-        const index = historyRecords.value.findIndex(r => r.id === updatedRecord.id);
-        if (index !== -1) {
-            historyRecords.value[index].question = updatedRecord.question;
-            alert('占卜問題更新成功！');
-        }
-
-    } catch (error) {
-        console.error('Failed to update question:', error);
-        if (error.message === 'Unauthorized') {
-            alert('權限不足或登入過期，請重新登入。');
-            handleLogout();
-        } else {
-            alert(`更新占卜問題失敗: ${error.message}`);
-        }
+// 資料獲取
+const fetchMemberData = async () => {
+  try {
+    const token = localStorage.getItem('userToken');
+    
+    if (!token) {
+      alert('請先登入以查看會員資料。');
+      handleLogout();
+      return;
     }
+
+    // 使用專用的 axios 實例並行請求
+    const [userResponse, recordsResponse] = await Promise.all([
+      apiClient.get('/user/profile'),
+      apiClient.get('/divination/history')
+    ]);
+
+    // 更新前端狀態
+    userData.value = userResponse.data;
+    historyRecords.value = recordsResponse.data.records || [];
+    console.log('Member data loaded successfully.');
+
+  } catch (error) {
+    console.error('Error fetching member data:', error);
+    
+    if (error.response) {
+      const status = error.response.status;
+      const message = error.response.data?.message || '載入會員資料失敗';
+      
+      if (status === 401) {
+        // 401 錯誤已由攔截器處理
+        return;
+      } else {
+        alert(`${message} (錯誤代碼: ${status})`);
+      }
+    } else if (error.request) {
+      alert('網路連線錯誤，請檢查您的網路連線。');
+    } else {
+      alert(`載入會員資料失敗: ${error.message}`);
+    }
+  }
+};
+
+// 處理子組件發出的更新事件
+const handleUpdateQuestion = async (updatedRecord) => {
+  try {
+    // 使用專用的 axios 實例
+    await apiClient.put(`/divination/history/${updatedRecord.id}`, {
+      question: updatedRecord.question
+    });
+
+    // 更新成功：同步更新前端的資料狀態
+    const index = historyRecords.value.findIndex(r => r.id === updatedRecord.id);
+    if (index !== -1) {
+      historyRecords.value[index].question = updatedRecord.question;
+      alert('占卜問題更新成功！');
+    }
+
+  } catch (error) {
+    console.error('Failed to update question:', error);
+    
+    if (error.response) {
+      const status = error.response.status;
+      const message = error.response.data?.message || '更新占卜問題失敗';
+      
+      if (status === 401) {
+        // 401 錯誤已由攔截器處理
+        return;
+      } else {
+        alert(`${message} (錯誤代碼: ${status})`);
+      }
+    } else if (error.request) {
+      alert('網路連線錯誤，請檢查您的網路連線。');
+    } else {
+      alert(`更新占卜問題失敗: ${error.message}`);
+    }
+  }
 };
 
 // 生命週期
 onMounted(() => {
-    // 首次進入頁面檢查並載入資料
-    const token = localStorage.getItem('userToken');
-    if (token) {
-        fetchMemberData();
-    } else {
-        // 若一開始就沒有 Token，直接導航至登入頁
-        handleLogout(); 
-    }
+  const token = localStorage.getItem('userToken');
+  if (token) {
+    fetchMemberData();
+  } else {
+    handleLogout(); 
+  }
 });
 </script>
 

@@ -1,50 +1,44 @@
 <script setup>
-  import { ref } from 'vue';
-  import axios from 'axios';
-  import { useRouter } from 'vue-router';
+import { ref } from 'vue';
+import { login } from '@/services/api';
+import { useRouter } from 'vue-router';
 
-  const router = useRouter();
+const router = useRouter();
+const email = ref('');
+const password = ref('');
+const loginError = ref('');
 
-  const username = ref('');
-  const password = ref('');
-  const loginError = ref('');
+const handleLogin = async () => {
+  loginError.value = '';
 
-  const handleLogin = async() => {
-  
-    loginError.value = '';
+  try {
+    const loginData = { email: email.value, password: password.value };
+    const user = await login(loginData);
 
-    try {
-      const response = await axios.post('/api/login', {
-          username: username.value,
-          password: password.value,
-      });
-
-      const { token, user } = response.data;
-
-      if (token) {
-          localStorage.setItem('userToken', token);
-          console.log('登入成功，請盡情探索心靈！');
-          router.push('/profile');
-      } else {
-          loginError.value = '登入失敗，伺服器未回傳授權資訊。';
-      }
-
+ if (userResponse && userResponse.email) {
+    // 💥 修正：暫時移除 JWT 相關儲存
+    console.log('登入成功', userResponse.fullName);
+    
+    // 可以在此儲存使用者名稱，以備會員頁面顯示
+    localStorage.setItem('userName', userResponse.fullName); 
+    
+    // 登入成功後導航到會員頁
+    router.push('/member-profile'); 
+  } else {
+    loginError.value = '登入失敗，伺服器響應無效';
+  }
     } catch (error) {
-        console.error('登入失敗：出現錯誤', error);
-        
-        if (error.response) {
-          const status = error.response.status;
-            
-          if (status === 401) {
-              loginError.value = '唉呀！登入失敗了，請檢查帳號密碼喲！';
-          } else {
-                loginError.value = error.response.data.message || `登入失敗：伺服器錯誤 (${status})。`;
-          }
-        } else {
-          loginError.value = '登入失敗：網路連線錯誤，請檢查您的網路。';
-        }
+      // ... (錯誤處理保持不變，因為後端現在會拋出 401)
+      console.error('登入錯誤', error);
+      if (error.response) {
+          loginError.value = error.response.status === 401
+              ? '帳號或密碼錯誤'
+              : `伺服器錯誤 (${error.response.status})`;
+      } else {
+          loginError.value = '網路錯誤，請稍後再試';
       }
-  };
+    }
+};
 </script>
 
 
@@ -54,8 +48,8 @@
       <h2>登入</h2>
       <form @submit.prevent="handleLogin">
         <div class="form-group">
-          <label for="username">帳號</label>
-          <input type="text" id="username" v-model="username" required>
+          <label for="email">帳號</label>
+          <input type="text" id="email" v-model="email" required>
         </div>
         <div class="form-group">
           <label for="password">密碼</label>
@@ -66,7 +60,7 @@
         <button type="submit">登入</button>
       </form>
       <p>
-        還不是會員嗎？ <router-link to="/RegisterView">註冊</router-link>
+        還不是會員嗎？ <router-link to="/register">註冊</router-link>
       </p>
       <p>
         <router-link to="/">回到首頁</router-link>
