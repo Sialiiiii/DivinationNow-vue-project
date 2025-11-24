@@ -1,69 +1,101 @@
 <script setup>
-import { ref } from 'vue';
-import { register } from '@/services/api';
-import { useRouter } from 'vue-router';
+  import { ref } from 'vue';
+  import { register } from '@/services/api';
+  import { useRouter } from 'vue-router';
 
-const router = useRouter();
-const email = ref('');
-const password = ref('');
-const confirmPassword = ref('');
-const fullName = ref('');
-const gender = ref('');
-const birthday = ref('');
-const careerStatus = ref('');
-const relationshipStatus = ref('');
-const registerError = ref('');
-const registerSuccess = ref('');
+  const router = useRouter();
+  const email = ref('');
+  const password = ref('');
+  const confirmPassword = ref('');
+  const username = ref('');
+  const gender = ref('');
+  const dateOfBirth = ref('');
+  const careerStatus = ref('');
+  const relationshipStatus = ref('');
+  const registerError = ref('');
+  const registerSuccess = ref('');
+  const showSuccessModal = ref(false);
 
-const handleRegister = async () => {
-  registerError.value = '';
-  registerSuccess.value = '';
-
-  if (password.value !== confirmPassword.value) {
-    registerError.value = '密碼與確認密碼不一致！';
-    return;
-  }
-
-  const requiredFields = [
-    email.value, password.value, confirmPassword.value,
-    fullName.value, gender.value, birthday.value,
-    careerStatus.value, relationshipStatus.value
-  ];
-
-  if (requiredFields.some(field => !field)) {
-    registerError.value = '請填寫所有必填欄位！';
-    return;
-  }
-
-  try {
-    const userData = {
-      email: email.value,
-      passwordHash: password.value,
-      confirmPassword: confirmPassword.value,
-      fullName: fullName.value,
-      gender: gender.value,
-      birthday: birthday.value,
-      careerStatus: careerStatus.value,
-      relationshipStatus: relationshipStatus.value
-    };
-
-    const response = await register(userData);
-    console.log('Register successful:', response);
-    registerSuccess.value = '註冊成功！您可以登入開始心靈旅行了。';
-
-    setTimeout(() => router.push('/login'), 1500);
-  } catch (error) {
-    console.error('Register failed:', error);
-    if (error.response) {
-      const status = error.response.status;
-      if (status === 409) registerError.value = '此 Email 已被使用';
-      else if (status === 400) registerError.value = '請求資料格式不正確';
-      else registerError.value = `伺服器錯誤 (${status})`;
-    } else {
-      registerError.value = '網路錯誤，請稍後再試';
+// Enum 轉換函數
+  const mapGenderToBackend = (frontendGender) => {
+    switch (frontendGender) {
+      case '男': return 'MALE';
+      case '女': return 'FEMALE';
+      default: return 'PREFER_NOT_TO_SAY';
     }
-  }
-};
+  };
+
+  const mapCareerStatusToBackend = (frontendStatus) => {
+    switch (frontendStatus) {
+      case '就業中': return 'EMPLOYED';
+      case '職涯探索中': return 'UNEMPLOYED';
+      case '學生': return 'STUDENT';
+      case '其他': return 'OTHER';
+      default: return 'UNEMPLOYED';
+    }
+  };
+
+  const mapRelationshipStatusToBackend = (frontendStatus) => {
+    switch (frontendStatus) {
+      case '已婚': return 'MARRIED';
+      case '穩定交往': return 'IN_A_RELATIONSHIP';
+      case '曖昧': return 'COMPLICATED';
+      case '一個人也很好': return 'SINGLE';
+      default: return 'SINGLE';
+    }
+  };
+
+
+  const handleRegister = async () => {
+    registerError.value = '';
+    registerSuccess.value = '';
+
+    if (password.value !== confirmPassword.value) {
+      registerError.value = '密碼與確認密碼不一致！';
+      return;
+    }
+
+    const requiredFields = [
+      email.value, password.value,username.value, gender.value, dateOfBirth.value,
+      careerStatus.value, relationshipStatus.value
+    ];
+
+    if (requiredFields.some(field => !field)) {
+      registerError.value = '請填寫所有必填欄位！';
+      return;
+    }
+
+    try {
+      const userData = {
+        email: email.value.trim(),
+        password: password.value,
+        username: username.value,
+        dateOfBirth: dateOfBirth.value,
+        gender: mapGenderToBackend(gender.value),
+        careerStatus: mapCareerStatusToBackend(careerStatus.value),
+        relationshipStatus: mapRelationshipStatusToBackend(relationshipStatus.value)
+      };
+
+      const response = await register(userData);
+      console.log('Register successful:', response);
+      registerSuccess.value = '註冊成功，請重新登入！';
+      showSuccessModal.value = true;
+
+      setTimeout(() => {
+        showSuccessModal.value = false;
+        router.push('/login');
+      }, 1500);
+    } catch (error) {
+      console.error('Register failed:', error);
+      if (error.response) {
+        const errorMessage = error.response.data.error || `伺服器錯誤
+       (${error.response.status})`;
+       registerError.value = errorMessage;
+      } else {
+        registerError.value = '網路錯誤，請稍後再試';
+      }
+    }
+  };
 </script>
 
 
@@ -90,13 +122,13 @@ const handleRegister = async () => {
         </div>
 
         <div class="form-group">
-          <label for="fullName">姓名</label>
-          <input type="text" id="fullName" v-model="fullName" required>
+          <label for="username">姓名</label>
+          <input type="text" id="username" v-model="username" required>
         </div>
 
         <div class="form-group">
-          <label for="birthday">生日</label>
-          <input type="date" id="birthday" v-model="birthday" required>
+          <label for="dateOfBirth">生日</label>
+          <input type="date" id="dateOfBirth" v-model="dateOfBirth" required>
         </div>
 
         <div class="form-group radio-section compact-radio">
@@ -116,7 +148,7 @@ const handleRegister = async () => {
             <input type="radio" id="careerEmployed" value="就業中" v-model="careerStatus" name="careerStatus" required>
             <label for="careerEmployed">就業中</label>
             
-            <input type="radio" id="careerUnemployed" value="待業" v-model="careerStatus" name="careerStatus" required>
+            <input type="radio" id="careerUnemployed" value="職涯探索中" v-model="careerStatus" name="careerStatus" required>
             <label for="careerUnemployed">職涯探索中</label>
             
             <input type="radio" id="careerStudent" value="學生" v-model="careerStatus" name="careerStatus" required>
@@ -139,8 +171,8 @@ const handleRegister = async () => {
             <input type="radio" id="relAmbiguous" value="曖昧" v-model="relationshipStatus" name="relationshipStatus" required>
             <label for="relAmbiguous">曖昧</label>
             
-            <input type="radio" id="relSingle" value="單身" v-model="relationshipStatus" name="relationshipStatus" required>
-            <label for="relSingle">單身</label>
+            <input type="radio" id="relSingle" value="一個人也很好" v-model="relationshipStatus" name="relationshipStatus" required>
+            <label for="relSingle">一個人也很好</label>
           </div>
         </div>
 
@@ -152,6 +184,13 @@ const handleRegister = async () => {
       <p>
       <router-link to="/">回到首頁</router-link>
       </p>
+    </div>
+
+    <!-- Success Modal -->
+    <div v-if="showSuccessModal" class="modal-overlay">
+      <div class="modal-content success">
+        <p>{{ registerSuccess }}</p>
+      </div>
     </div>
   </div>
   
@@ -313,5 +352,35 @@ const handleRegister = async () => {
   .auth-form p a:hover {
       color: var(--color-dark-text);
       text-decoration: underline;
+  }
+
+  /* Modal Styles */
+  .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.7);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+  }
+
+  .modal-content {
+      background-color: white;
+      padding: 30px 40px;
+      border-radius: 10px;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+      text-align: center;
+      color: var(--color-dark-text);
+      font-size: 1.2em;
+      max-width: 80%;
+      min-width: 300px;
+  }
+
+  .modal-content.success {
+      border: 2px solid #4CAF50;
   }
 </style>

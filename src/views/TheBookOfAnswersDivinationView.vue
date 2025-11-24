@@ -1,8 +1,14 @@
 <script setup>
   import { ref } from 'vue';
   import { useRouter } from 'vue-router'
+  import { useAuthStore } from '@/stores/auth';
 
   const router = useRouter()
+  const authStore = useAuthStore();
+  const handleLogout = () => {
+    authStore.logout();
+  };
+  
   // 假資料
     const ANSWERS = [
       "是的，毫無疑問",
@@ -137,9 +143,21 @@
         
         <div class="shared-header-bottom">
             <button @click="toggleMenu" class="shared-menu-icon">&#9776;</button>
-            <div class="book-actions">
-                <a href="#" class="shared-btn-user">會員資料</a>
+            <!-- <div class="book-actions">
+                <router-link to="/member-profile" class="shared-btn-user">會員資料</router-link>
                 <a href="#" class="shared-btn-logout">登出</a> 
+            </div> -->
+            <div v-if="authStore.isAuthenticated" class="book-actions">
+              <nav class="auth-buttons">
+              <router-link to="/member-profile" class="shared-btn-user">會員資料</router-link>
+              <a @click="handleLogout" class="shared-btn-logout">登出</a>
+              </nav>
+            </div>
+            <div v-else class="auth-content">
+              <nav class="auth-buttons">
+              <router-link to="/login" class="shared-btn-user">登入/註冊</router-link>
+              </nav>
+              <p class="login-tip">※ 登入會員可自動記錄每次占卜結果</p>
             </div>
         </div>
     </header>

@@ -1,5 +1,6 @@
 <script setup>
 import { useRouter } from 'vue-router'
+import { useAuthStore } from '@/stores/auth';
 
 import bannerImg from '@/assets/images/Banner02.jpg';
 import BookOfAnswersImg from '@/assets/images/BookOfAnswersBanner.jpg';
@@ -7,6 +8,10 @@ import RunesImg from '@/assets/images/RunesImgBanner.jpg';
 import FortuneStickImg from '@/assets/images/FortuneStickBanner.jpg';
 
 const router = useRouter()
+const authStore = useAuthStore();
+const handleLogout = () => {
+  authStore.logout();
+};
 
 function goBookOfAnswers() {
   router.push('/TheBookOfAnswersDivination')
@@ -32,14 +37,18 @@ function goFortuneStickTwo() {
     <header class="banner">
       <h1 class="main-title">DIVINATION.NOW</h1>
 
-    <div class="auth-section-wrapper">
-      <div class="auth-content">
+      <div v-if="authStore.isAuthenticated" class="auth-content">
+        <nav class="auth-login-content">
+          <router-link to="/member-profile" class="shared-btn-user">會員資料</router-link>
+          <a @click="handleLogout" class="shared-btn-logout">登出</a>
+        </nav>
+      </div>
+      <div v-else class="auth-content">
         <nav class="auth-buttons">
           <router-link to="/login" class="login-btn">登入/註冊</router-link>
         </nav>
         <p class="login-tip">※ 登入會員可自動記錄每次占卜結果</p>
       </div>
-    </div>
       
       <div class="banner-image-container">
         <div class="image-placeholder-top">
@@ -150,25 +159,34 @@ display: flex;
 /* -------------------- 1. 頂部 Banner 區塊 -------------------- */
 .banner {
   background-color: white;
-  padding-bottom: 30px;
+  /* padding-bottom: 30px; */
   position: relative;
   width: 100%;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between; 
+  align-items: flex-start; /* 讓標題和按鈕區塊從頂部對齊 */
+
 }
 
 /* 頂部大標題 */
 .main-title {
   font-size: 5rem;
   font-weight: 900;
-  text-align: left;
+  /* text-align: left; */
   margin: 0;
-  padding: 30px 80px 0;
+  /* padding: 30px 80px 0; */
+  padding: 30px 0 0 80px;
   letter-spacing: 0.1em;
   color: black;
+  flex-shrink: 0;
 }
 
 /* Banner 圖片容器 */
 .banner-image-container {
   width: 100%;
+  order: 1;
+  margin-top: 20px;
   padding: 0 80px;
   box-sizing: border-box;
 }
@@ -195,8 +213,15 @@ display: flex;
 .auth-content {
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: flex-end; 
+  padding: 60px 80px 0 0; 
+  flex-shrink: 0;
 }
+
+.auth-login-content{
+  padding: 20px 10px 0 0; 
+}
+
 
 /* 登入/註冊按鈕定位 */
 .auth-section-wrapper {
@@ -234,7 +259,7 @@ display: flex;
 .login-tip {
   font-size: 0.8rem; 
   color: #555; 
-  margin-top: 3px;
+  margin-top: 8px;
   text-align: center; 
 }
 
@@ -386,9 +411,21 @@ display: flex;
     padding: 0 40px;
   }
 
+  /* 包裹按鈕和提示文字的容器 */
+  .auth-content {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end; 
+    padding: 30px 80px 0 0; 
+    flex-shrink: 0;
+  }
+
+  .auth-login-content{
+  padding: 20px 10px 0 0; 
+}
   /* 針對登入/註冊按鈕區塊的修正 */
     .auth-section-wrapper {
-        top: 40px;
+        top: 0px;
         right: 40px;
         margin-bottom: 30px;
     }
@@ -433,12 +470,21 @@ display: flex;
 }
 
 
-@media (max-width: 978px) {
+@media (max-width: 1046px) {
   .main-title {
     font-size: 3rem; 
-    padding: 20px 220px 0 40px !important; 
+    padding: 20px 0 0 40px; 
   }
   
+  .auth-content {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start; 
+  padding: 20px 40px 0 0; 
+  margin-left: 40px;
+  flex-shrink: 0;
+}
+
   .auth-section-wrapper {
     top: 20px; 
     right: -25px; 
@@ -449,6 +495,7 @@ display: flex;
   .main-title {
     font-size: 2.5rem;
     padding: 20px 20px 0;
+    margin-right: 20px;
   }
   
   .banner-image-container {
@@ -456,13 +503,23 @@ display: flex;
     margin-bottom: 30px;
   }
   
-  .auth-buttons {
-    top: 30px; 
-    padding: 20px 20px 0;
+  .auth-login-content{
+  padding: 10px 10px 0 0; 
+  margin-left: 20px;
   }
 
-  .login-tip {
-    font-size: 0.75rem;
+  .auth-content {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start; 
+    padding: 10px 80px 0 0; 
+    margin-left: 20px;
+    flex-shrink: 0;
+  }
+
+  .auth-buttons {
+    top: 30px; 
+    /* padding: 20px 20px 0; */
   }
 
   .auth-section-wrapper {
@@ -554,4 +611,5 @@ display: flex;
     padding: 15px 20px;
   }
 }
+
 </style>

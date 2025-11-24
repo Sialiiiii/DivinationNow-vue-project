@@ -200,7 +200,7 @@
       <div class="shared-header-bottom">
         <button @click="toggleMenu" class="shared-menu-icon">&#9776;</button>
           <div class="book-actions">
-            <a href="#" class="shared-btn-user">會員資料</a>
+            <router-link to="/member-profile" class="shared-btn-user">會員資料</router-link>
             <a href="#" class="shared-btn-logout">登出</a> 
           </div>
       </div>

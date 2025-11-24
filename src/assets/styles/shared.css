@@ -182,6 +182,11 @@ font-size: 30px; /* 調整大小 */
       border-radius: 5px; 
       margin-right: 25px; /* 與「登出」的間距 */
       white-space: nowrap; /* 防止換行 */
+      cursor: pointer; 
+      transition: background-color 0.2s ease, transform 0.1s ease;
+  }
+  .shared-btn-user:hover {
+    background-color: #3f3f3f;
   }
 
   /* "登出" 文字樣式（無背景文字） */
@@ -189,9 +194,15 @@ font-size: 30px; /* 調整大小 */
       text-decoration: none;
       font-size: 16px;
       font-weight: 400;
-      color: #333;
+      color: #1d1c1c;
       padding: 0;
       white-space: nowrap;
+      cursor: pointer; 
+      transition: color 0.1s ease;
+  }
+  .shared-btn-logout:hover {
+      color: #6f7172; 
+      cursor: pointer; 
   }
 
   @media (max-width: 770px) {

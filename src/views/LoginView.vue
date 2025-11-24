@@ -1,43 +1,48 @@
 <script setup>
 import { ref } from 'vue';
-import { login } from '@/services/api';
+import { login as apiLogin } from '@/services/api';
+import { useAuthStore } from '@/stores/auth';
 import { useRouter } from 'vue-router';
 
 const router = useRouter();
 const email = ref('');
 const password = ref('');
 const loginError = ref('');
+const loginSuccess = ref('');
+const authStore = useAuthStore();
 
 const handleLogin = async () => {
   loginError.value = '';
+  loginSuccess.value = '';
 
   try {
-    const loginData = { email: email.value, password: password.value };
-    const user = await login(loginData);
+    const loginData = { 
+      email: email.value.trim(), 
+      password: password.value 
+    };
+    
+    const response = await apiLogin(loginData); 
 
- if (userResponse && userResponse.email) {
-    // 💥 修正：暫時移除 JWT 相關儲存
-    console.log('登入成功', userResponse.fullName);
+    if (response && response.token) {
+      console.log('登入成功');
+      loginSuccess.value = response.message || '登入成功！';
+
+      // 呼叫 store 的 login action
+    authStore.login(response.token);
+    router.push('/');
     
-    // 可以在此儲存使用者名稱，以備會員頁面顯示
-    localStorage.setItem('userName', userResponse.fullName); 
-    
-    // 登入成功後導航到會員頁
-    router.push('/member-profile'); 
-  } else {
-    loginError.value = '登入失敗，伺服器響應無效';
-  }
-    } catch (error) {
-      // ... (錯誤處理保持不變，因為後端現在會拋出 401)
-      console.error('登入錯誤', error);
-      if (error.response) {
-          loginError.value = error.response.status === 401
-              ? '帳號或密碼錯誤'
-              : `伺服器錯誤 (${error.response.status})`;
-      } else {
-          loginError.value = '網路錯誤，請稍後再試';
+    } else {
+        loginError.value = '登入失敗，伺服器響應無效或未提供 Token';
       }
+  } catch (error) {
+    console.error('登入錯誤', error);
+    if (error.response) {
+      const errorMessage = error.response.data.error || `伺服器錯誤 (${error.response.status})`;
+      loginError.value = errorMessage;
+    } else {
+      loginError.value = '網路錯誤，請稍後再試';
     }
+  }
 };
 </script>
 
@@ -45,7 +50,7 @@ const handleLogin = async () => {
 <template>
   <div class="auth-container">
     <div class="auth-form">
-      <h2>登入</h2>
+      <h2>準備好探索心靈</h2>
       <form @submit.prevent="handleLogin">
         <div class="form-group">
           <label for="email">帳號</label>
@@ -56,6 +61,7 @@ const handleLogin = async () => {
           <input type="password" id="password" v-model="password" required>
         </div>
         <p v-if="loginError" style="color: red; margin-top: 10px;">{{ loginError }}</p>
+        <p v-if="loginSuccess" style="color: green; margin-top: 10px;">{{ loginSuccess }}</p>
         
         <button type="submit">登入</button>
       </form>

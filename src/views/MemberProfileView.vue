@@ -22,7 +22,7 @@ const apiClient = axios.create({
 // 請求攔截器：自動添加 Token
 apiClient.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('userToken');
+    const token = localStorage.getItem('jwt_token');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -47,7 +47,7 @@ apiClient.interceptors.response.use(
 
 // 登出與導航邏輯
 const handleLogout = () => {
-  localStorage.removeItem('userToken');
+  localStorage.removeItem('jwt_token');
   console.log('User logged out, navigating to login.');
   router.push('/login');
 };
@@ -89,7 +89,7 @@ const goFortuneStickTwo = () => {
 // 資料獲取
 const fetchMemberData = async () => {
   try {
-    const token = localStorage.getItem('userToken');
+    const token = localStorage.getItem('jwt_token');
     
     if (!token) {
       alert('請先登入以查看會員資料。');
@@ -167,7 +167,7 @@ const handleUpdateQuestion = async (updatedRecord) => {
 
 // 生命週期
 onMounted(() => {
-  const token = localStorage.getItem('userToken');
+  const token = localStorage.getItem('jwt_token');
   if (token) {
     fetchMemberData();
   } else {
@@ -207,7 +207,7 @@ onMounted(() => {
       <div class="shared-header-bottom">
         <button @click="toggleMenu" class="shared-menu-icon">&#9776;</button>
         <div class="book-actions">
-          <router-link to="/profile" class="shared-btn-user">會員資料</router-link>
+          <router-link to="/member-profile" class="shared-btn-user">會員資料</router-link>
           <a href="#" @click.prevent="handleLogout" class="shared-btn-logout">登出</a> 
         </div>
       </div>
