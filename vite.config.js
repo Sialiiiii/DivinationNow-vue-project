@@ -14,12 +14,12 @@ export default defineConfig({
     },
   },
   server: {
-    proxy: {
-      // /api 開頭請求會自動轉發到後端
-      '/api': {
-        target: 'http://localhost:8080',
-        changeOrigin: true,
-      },
-    },
+  proxy: {
+   '/api': {
+    target: 'http://localhost:8080',
+    changeOrigin: true,
+    rewrite: (path) => path.replace(/^\/api/, ''), 
+   },
   },
+ },
 })

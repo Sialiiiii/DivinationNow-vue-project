@@ -2,36 +2,26 @@
 import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import axios from 'axios';
+import { useAuthStore } from '@/stores/auth';
 
 import UserProfileCard from '../components/Member/UserProfileCard.vue';
 import DivinationHistoryTable from '../components/Member/DivinationHistoryTable.vue';
 
 const router = useRouter();
 const isMenuOpen = ref(false); 
+const authStore = useAuthStore();
 
 // 用於儲存後端獲取的真實資料
 const userData = ref(null); 
-// const historyRecords = ref([]); 
+const historyRecords = ref([]); 
 
 // 創建專用的 axios 實例（避免污染全域）
 const apiClient = axios.create({
   baseURL: '/api',
-  timeout: 10000
+  timeout: 10000,
+  withCredentials: true
 });
 
-// 請求攔截器：自動添加 Token
-apiClient.interceptors.request.use(
-  (config) => {
-    const token = localStorage.getItem('jwt_token');
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-    return config;
-  },
-  (error) => {
-    return Promise.reject(error);
-  }
-);
 
 // 響應攔截器：統一處理 401 錯誤
 apiClient.interceptors.response.use(
@@ -47,9 +37,11 @@ apiClient.interceptors.response.use(
 
 // 登出與導航邏輯
 const handleLogout = () => {
-  localStorage.removeItem('jwt_token');
-  console.log('User logged out, navigating to login.');
-  router.push('/login');
+  // 🚀 關鍵修正 3: 不再手動操作 localStorage，只呼叫 Pinia Store 的 logout
+  authStore.logout(); 
+  console.log('User logged out, navigating to login.');
+  // 注意：authStore.logout() 內會執行 router.push('/')
+  router.push('/login'); // 由於您的 Store 內導向的是 /，這裡改為導向 /login
 };
 
 const toggleMenu = () => {
@@ -88,45 +80,28 @@ const goFortuneStickTwo = () => {
 
 // 資料獲取
 const fetchMemberData = async () => {
-  try {
-    const token = localStorage.getItem('jwt_token');
-    
-    if (!token) {
-      alert('請先登入以查看會員資料。');
-      handleLogout();
-      return;
-    }
+  try {
+    // 🚀 關鍵修正 4: 移除所有前端 Token 檢查，直接依賴 Session Cookie
+    // 瀏覽器會自動帶上 Session Cookie，後端會判斷是否授權
 
-    // 使用專用的 axios 實例並行請求
-    const [userResponse, recordsResponse] = await Promise.all([
-      apiClient.get('/user/profile'),
-      apiClient.get('/divination/history')
-    ]);
+    // 使用專用的 axios 實例並行請求
+    const [userResponse, recordsResponse] = await Promise.all([
+      apiClient.get('/user/profile'),
+      apiClient.get('/divination/history')
+    ]);
 
-    // 更新前端狀態
-    userData.value = userResponse.data;
-    historyRecords.value = recordsResponse.data.records || [];
-    console.log('Member data loaded successfully.');
+    // 更新前端狀態
+    userData.value = userResponse.data;
+    historyRecords.value = recordsResponse.data.records || [];
+    console.log('Member data loaded successfully.');
 
-  } catch (error) {
-    console.error('Error fetching member data:', error);
-    
-    if (error.response) {
-      const status = error.response.status;
-      const message = error.response.data?.message || '載入會員資料失敗';
-      
-      if (status === 401) {
-        // 401 錯誤已由攔截器處理
-        return;
-      } else {
-        alert(`${message} (錯誤代碼: ${status})`);
-      }
-    } else if (error.request) {
-      alert('網路連線錯誤，請檢查您的網路連線。');
-    } else {
-      alert(`載入會員資料失敗: ${error.message}`);
-    }
-  }
+  } catch (error) {
+    // 錯誤處理：如果不是 401 (已在攔截器處理)，則顯示其他錯誤
+    if (error.response?.status !== 401) {
+      console.error('Error fetching member data:', error);
+      alert(`載入會員資料失敗: ${error.message || '網路錯誤'}`);
+    }
+  }
 };
 
 // 處理子組件發出的更新事件
@@ -167,12 +142,7 @@ const handleUpdateQuestion = async (updatedRecord) => {
 
 // 生命週期
 onMounted(() => {
-  const token = localStorage.getItem('jwt_token');
-  if (token) {
-    fetchMemberData();
-  } else {
-    handleLogout(); 
-  }
+  fetchMemberData();
 });
 </script>
 

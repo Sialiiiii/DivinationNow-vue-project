@@ -1,103 +1,132 @@
 <script setup>
-  import { ref } from 'vue';
-  import { register } from '@/services/api';
-  import { useRouter } from 'vue-router';
+  import { ref } from 'vue';
+  import { register } from '@/services/auth';
+  import { useRouter } from 'vue-router';
 
-  const router = useRouter();
-  const email = ref('');
-  const password = ref('');
-  const confirmPassword = ref('');
-  const username = ref('');
-  const gender = ref('');
-  const dateOfBirth = ref('');
-  const careerStatus = ref('');
-  const relationshipStatus = ref('');
-  const registerError = ref('');
-  const registerSuccess = ref('');
-  const showSuccessModal = ref(false);
+  const router = useRouter();
+  const email = ref('');
+  const password = ref('');
+  const confirmPassword = ref('');
+  const username = ref('');
+  const gender = ref('');
+  const dateOfBirth = ref('');
+  const careerStatus = ref('');
+  const relationshipStatus = ref('');
+  const registerError = ref('');
+  const registerSuccess = ref('');
+  const showSuccessModal = ref(false);
 
-// Enum 轉換函數
-  const mapGenderToBackend = (frontendGender) => {
-    switch (frontendGender) {
-      case '男': return 'MALE';
-      case '女': return 'FEMALE';
-      default: return 'PREFER_NOT_TO_SAY';
-    }
-  };
+  const mapGenderToBackend = (frontendGender) => {
+    switch (frontendGender) {
+      case '男': return 'MALE';
+      case '女': return 'FEMALE';
+      default: return 'PREFER_NOT_TO_SAY';
+    }
+  };
 
-  const mapCareerStatusToBackend = (frontendStatus) => {
-    switch (frontendStatus) {
-      case '就業中': return 'EMPLOYED';
-      case '職涯探索中': return 'UNEMPLOYED';
-      case '學生': return 'STUDENT';
-      case '其他': return 'OTHER';
-      default: return 'UNEMPLOYED';
-    }
-  };
+  // 映射事業狀態 (後端 DTO 接收 careerStatusValue 字串)
+  const mapCareerStatusToBackend = (frontendStatus) => {
+    switch (frontendStatus) {
+      case '就業中': return 'EMPLOYED';
+      case '職涯探索中': return 'UNEMPLOYED';
+      case '學生': return 'STUDENT';
+      case '其他': return 'OTHER';
+      default: return ''; 
+    }
+  };
 
-  const mapRelationshipStatusToBackend = (frontendStatus) => {
-    switch (frontendStatus) {
-      case '已婚': return 'MARRIED';
-      case '穩定交往': return 'IN_A_RELATIONSHIP';
-      case '曖昧': return 'COMPLICATED';
-      case '一個人也很好': return 'SINGLE';
-      default: return 'SINGLE';
-    }
-  };
+// 映射感情狀態 (後端 DTO 接收 relationshipStatusValue 字串)
+  const mapRelationshipStatusToBackend = (frontendStatus) => {
+    switch (frontendStatus) {
+      case '已婚': return 'MARRIED';
+      case '穩定交往': return 'IN_A_RELATIONSHIP';
+      case '曖昧': return 'COMPLICATED';
+      case '一個人也很好': return 'SINGLE';
+      default: return ''; 
+    }
+  };
+
+ const handleRegister = async () => {
+  registerError.value = '';
+  registerSuccess.value = '';
+
+  if (password.value !== confirmPassword.value) {
+    registerError.value = '密碼與確認密碼不一致！';
+    return;
+  }
+  
+     // 🚀 修正點：將聲明和賦值移動到這裡 (確保在使用前被定義)
+     const mappedRelationshipStatus = mapRelationshipStatusToBackend(relationshipStatus.value); 
 
 
-  const handleRegister = async () => {
-    registerError.value = '';
-    registerSuccess.value = '';
+  // 檢查所有必填欄位
+  const requiredFields = [
+    email.value, password.value, username.value, gender.value, dateOfBirth.value,
+    careerStatus.value, relationshipStatus.value
+  ];
 
-    if (password.value !== confirmPassword.value) {
-      registerError.value = '密碼與確認密碼不一致！';
-      return;
-    }
+  if (requiredFields.some(field => !field)) {
+    registerError.value = '請填寫所有必填欄位！';
+    return;
+  }
 
-    const requiredFields = [
-      email.value, password.value,username.value, gender.value, dateOfBirth.value,
-      careerStatus.value, relationshipStatus.value
-    ];
+  try {
+    const userData = {
+      email: email.value.trim(),
+      password: password.value,
+      username: username.value,
+      
+      dateOfBirth: dateOfBirth.value, // YYYY-MM-DD 格式
+      gender: mapGenderToBackend(gender.value),
+      
+      careerStatusValue: mapCareerStatusToBackend(careerStatus.value),
+      relationshipStatusValue: mappedRelationshipStatus 
 
-    if (requiredFields.some(field => !field)) {
-      registerError.value = '請填寫所有必填欄位！';
-      return;
-    }
+    };
 
-    try {
-      const userData = {
-        email: email.value.trim(),
-        password: password.value,
-        username: username.value,
-        dateOfBirth: dateOfBirth.value,
-        gender: mapGenderToBackend(gender.value),
-        careerStatus: mapCareerStatusToBackend(careerStatus.value),
-        relationshipStatus: mapRelationshipStatusToBackend(relationshipStatus.value)
-      };
+    const response = await register(userData);
+    console.log('Register successful:', response);
+    registerSuccess.value = '註冊成功，請重新登入！';
+    showSuccessModal.value = true;
 
-      const response = await register(userData);
-      console.log('Register successful:', response);
-      registerSuccess.value = '註冊成功，請重新登入！';
-      showSuccessModal.value = true;
+    setTimeout(() => {
+      showSuccessModal.value = false;
+      router.push('/login');
+    }, 1500);
 
-      setTimeout(() => {
-        showSuccessModal.value = false;
-        router.push('/login');
-      }, 1500);
-    } catch (error) {
-      console.error('Register failed:', error);
-      if (error.response) {
-        const errorMessage = error.response.data.error || `伺服器錯誤
-       (${error.response.status})`;
-       registerError.value = errorMessage;
-      } else {
-        registerError.value = '網路錯誤，請稍後再試';
-      }
-    }
-  };
+  } catch (error) {
+      console.error('Register failed:', error);
+      
+      let errorMessage = '網路連線失敗，請檢查後端服務器是否正在運行。';
+
+      if (error.response) {
+        const status = error.response.status;
+        const responseData = error.response.data;
+
+        if (status === 400) {
+          if (typeof responseData === 'string' && responseData.length > 0) {
+            errorMessage = responseData; 
+          } 
+          else if (responseData && responseData.message) {
+            errorMessage = responseData.message;
+          }
+          else {
+            errorMessage = '註冊資料無效，請檢查輸入或更換電子郵件。';
+          }
+        } else if (status >= 500) {
+          errorMessage = `伺服器內部錯誤 (${status})，請稍後再試。`;
+        } else {
+          errorMessage = `連線錯誤 (${status})：${error.response.statusText}`;
+        }
+        
+        registerError.value = errorMessage;
+          
+      } else {
+        registerError.value = errorMessage;
+      }
+  }
+};
 </script>
-
 
 
 
@@ -122,7 +151,7 @@
         </div>
 
         <div class="form-group">
-          <label for="username">姓名</label>
+          <label for="username">暱稱</label>
           <input type="text" id="username" v-model="username" required>
         </div>
 
@@ -165,7 +194,7 @@
             <input type="radio" id="relMarried" value="已婚" v-model="relationshipStatus" name="relationshipStatus" required>
             <label for="relMarried">已婚</label>
             
-            <input type="radio" id="relStable" value="穩交" v-model="relationshipStatus" name="relationshipStatus" required>
+            <input type="radio" id="relStable" value="穩定交往" v-model="relationshipStatus" name="relationshipStatus" required>
             <label for="relStable">穩定交往</label>
             
             <input type="radio" id="relAmbiguous" value="曖昧" v-model="relationshipStatus" name="relationshipStatus" required>

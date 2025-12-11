@@ -1,167 +1,280 @@
 <script setup>
-  import { ref,onMounted } from 'vue';
-  import { useRouter } from 'vue-router'
+import { onMounted, ref } from 'vue';
+import { useRouter } from 'vue-router';
+import { fetchRuneData, saveRuneLog } from '../services/runes';
+import { useAuthStore } from '../stores/auth';
 
-  const router = useRouter()
-
-  // --- 狀態管理 ---
-  const showInstruction = ref(true); // 控制是否顯示占卜說明框 (true: 顯示說明, false: 顯示抽卡)
-
-  // --- 漢堡選單 ---
-  const isMenuOpen = ref(false); 
-
-  const toggleMenu = () => {
-    isMenuOpen.value = !isMenuOpen.value;
+const router = useRouter();
+const authStore = useAuthStore();
+ const handleLogout = () => {
+    authStore.logout();
   };
 
-  // --- 漢堡選單導航方法  ---
-  const goHome = () => {
-      isMenuOpen.value = false; // 關閉選單
-      router.push('/');
-  }
-  const goBookOfAnswers = () => {
-      isMenuOpen.value = false;
-      router.push('/TheBookOfAnswersDivination'); 
-  }
-  const goRunesOne = () => {
-      isMenuOpen.value = false;
-      resetToInstruction();
-  }
-  const goRunesTwo = () => {
-      isMenuOpen.value = false;
-      router.push('/RunesTwoDivination');
-  }
-  const goFortuneStickOne = () => {
-      isMenuOpen.value = false;
-      router.push('/FortuneStickOneDivination');
-  }
-  const goFortuneStickTwo = () => {
-      isMenuOpen.value = false;
-      router.push('/FortuneStickTwoDivination');
-  }
+if (!router) {
+  console.error('Router is not available!')
+}
 
-  // 卡片資料
+// --- 狀態管理 ---
+const showInstruction = ref(true); 
+const isMenuOpen = ref(false); 
+const isReadingLoading = ref(false); 
+const drawnCardId = ref(null);
+const isHovering = ref(false);
 
-  const initialCardData = Array.from({ length: 24 }, (_, i) => {
-    const index = i + 1;
-    const paddedNumber = String(index).padStart(2, '0');
-    return {
-      id: index, // 唯一 ID
-      front: String(index),
-      info: `卡片說明 ${index}`,
-      image: `/src/assets/images/RunesCard/CardFront${paddedNumber}.png`,
-      isDrawn: false, // 是否被抽出
-      isFlipped: false // 是否被翻面
-    };
-  });
 
-  // 響應式的卡片列表
-  const shuffledCards = ref([]);
+// --- 資料狀態管理 ---
+const isDataLoading = ref(true); // 追蹤初始 API 抓取狀態
+const allRuneData = ref([]); // 存放從 API 抓取的完整符文資料
 
-  // --- 邏輯函數 ---
+const initialCardDeck = ref([]); 
+const shuffledCards = ref([]);
 
-  /**
-     * 切換到抽卡畫面，並執行洗牌/重置
-     */
-    function startDivination() {
-      showInstruction.value = false; // 切換到抽卡畫面
-      shuffleAndReset(); // 開始前先洗牌
+
+// --- 漢堡選單 ---
+const toggleMenu = () => {
+  isMenuOpen.value = !isMenuOpen.value;
+};
+
+const goHome = () => {
+    isMenuOpen.value = false;
+    router.push('/');
+}
+const goBookOfAnswers = () => {
+    isMenuOpen.value = false;
+    router.push('/TheBookOfAnswersDivination'); 
+}
+const goRunesOne = () => {
+    isMenuOpen.value = false;
+    resetToInstruction();
+}
+const goRunesTwo = () => {
+    isMenuOpen.value = false;
+    router.push('/RunesTwoDivination');
+}
+const goFortuneStickOne = () => {
+    isMenuOpen.value = false;
+    router.push('/FortuneStickOneDivination');
+}
+const goFortuneStickTwo = () => {
+    isMenuOpen.value = false;
+    router.push('/FortuneStickTwoDivination');
+}
+
+// --- 邏輯函數 ---
+
+/**
+ * [NEW] 從 API 抓取完整的符文資料
+ */
+async function fetchAllRuneData() {
+    isDataLoading.value = true;
+    try {
+        const apiData = await fetchRuneData(); 
+
+        // 將 API 資料欄位轉換為前端慣用的結構
+        const formattedData = apiData.map(item => ({
+            original_orientation_id: item.orientation_id, 
+            rune_id: item.rune_id,
+            isReversed: item.is_reversed === 1, // 將 tinyint(1) 轉為 boolean
+            full_name_zh: item.full_name_zh,
+            full_name_en: item.full_name_en, 
+            general_meaning: item.rune_general_meaning,
+            image: item.rune_image_url, 
+        }));
+        allRuneData.value = formattedData;
+
+    } catch (error) {
+        console.error('Initial rune data fetch failed:', error);
+        alert('無法載入盧恩符文資料，請檢查網路連線或後端服務。');
+    } finally {
+        isDataLoading.value = false;
+    }
+}
+
+/**
+ * 從完整的牌組中隨機選取 24 張卡片
+ */
+function select24RandomCards(fullDeck) {
+    const deck = [];
+    while (deck.length < 24) {
+        deck.push(...fullDeck);
+    }
+    // Fisher-Yates 洗牌
+    for (let i = deck.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [deck[i], deck[j]] = [deck[j], deck[i]];
+    }
+    // 選取前 24 張並給予唯一的ID
+    return deck.slice(0, 24).map((card, index) => ({
+        ...card,
+        id: card.original_orientation_id * 100 + index
+    })); 
+}
+
+
+/**
+ * 進入抽卡畫面
+ */
+function startDivination() {
+    if (isDataLoading.value || allRuneData.value.length === 0) {
+        console.warn("Rune data not loaded yet. Cannot start divination.");
+        return;
+    }
+    showInstruction.value = false;
+    // 每次開始前重新選取24張並洗牌
+    initialCardDeck.value = select24RandomCards(allRuneData.value); // *** 使用 API 資料 ***
+    shuffleAndReset();
+}
+  
+/**
+ * 【API 串接點 】模擬將占卜結果記錄到會員資料
+ */
+async function saveDivinationRecord(card, finalReadingText) {
+  if (!authStore.isAuthenticated) {
+    console.log('[未登入] 占卜結果未記錄。');
+    return;
+  }
+  try {
+    // 必須使用 user.user_id 來獲取 Long 類型的 ID
+    const userId = authStore.user?.user_id; 
+    // 這是 rune_orientation_id
+    const orientationId = card.original_orientation_id; 
+    
+    // 🚀 關鍵修正點：單顆占卜不涉及主題/狀態 ID，傳遞 0 或 null
+    const statusId = 0; 
+    
+      if (!userId || !orientationId) {
+          console.error('[記錄失敗] 缺少 user_id 或符文 ID。');
+          return;
+      }
+
+    console.log(`[記錄點] 會員 ${userId} 正在記錄單顆符文占卜結果...`);
+
+      // *** 呼叫 API 紀錄 ***
+    // 🚀 修正點：傳遞 statusId 參數
+    const result = await saveRuneLog(userId, orientationId, statusId); 
+    console.log(`[記錄成功] 占卜紀錄已完成。Log ID: ${result.log_id || 'N/A'}`);
+  } catch (error) {
+    console.error(`[記錄失敗] 發生錯誤:`, error);
+  }
+}
+
+
+/**
+ * 處理卡片點擊事件 (抽牌/翻面邏輯)
+ */
+async function handleCardClick(clickedCard) {
+    // 如果卡片已翻面，則鎖定點擊。
+    if (clickedCard.isFlipped) {
+        return;
     }
     
-    /**
-     * 重置回說明畫面
-     */
-    function resetToInstruction() {
-    // 顯示說明畫面
-      showInstruction.value = true;
-    // 清空卡片狀態 (讓卡片收回牌堆)
-      shuffleAndReset();
+    // 如果有卡片正在加載則退出
+    if (isReadingLoading.value) {
+        return;
     }
 
-  /**
-   * Fisher-Yates 洗牌算法
-   * @param {Array} array - 要洗牌的陣列
-   * @returns {Array} - 洗牌後的陣列
-   */
-  function shuffle(array) {
-    const arr = [...array];
-    for (let i = arr.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [arr[i], arr[j]] = [arr[j], arr[i]];
+    if (clickedCard.isDrawn === false) {
+        // 1. 第一次點擊：抽取符文 (移動卡片)
+        
+        // 只有在沒有任何牌被翻開時，才能執行換牌邏輯
+        const isAnyCardFlipped = shuffledCards.value.some(card => card.isFlipped);
+        if (isAnyCardFlipped) {
+            return; 
+        }
+
+        // 換牌邏輯：清除舊的抽取狀態，並設定新牌
+        shuffledCards.value.forEach(card => card.isDrawn = false);
+        clickedCard.isDrawn = true;
+        drawnCardId.value = clickedCard.id; // 鎖定牌堆（用於視覺樣式）
+
+    } else if (clickedCard.isDrawn === true && clickedCard.isFlipped === false) {
+        // 2. 第二次點擊：翻面並顯示結果 (資料處理和紀錄)
+        
+        isReadingLoading.value = true;
+        
+        // 翻面
+        clickedCard.isFlipped = true;
+
+        // 模擬獲取 rune_general_meaning
+        await new Promise(resolve => setTimeout(resolve, 500)); 
+        
+        // 構造最終的顯示文本
+        const orientation_status = clickedCard.isReversed ? '逆位' : '正位';
+        
+        // 使用資料表欄位，格式化為要求的樣式
+        const finalReadingText = 
+        `${clickedCard.full_name_zh} / ${clickedCard.full_name_en}
+        
+        ${clickedCard.general_meaning}`.trimStart();
+
+        // 寫入卡片 info 欄位 (顯示結果)
+        clickedCard.info = finalReadingText; 
+        
+        // 嘗試儲存紀錄 (API 記錄)
+        await saveDivinationRecord(clickedCard, finalReadingText); 
+        
+        isReadingLoading.value = false;
     }
-    return arr;
-  }
+}
 
-  /**
-   * 計算卡片在 CSS 變數中的索引值 (從 -12 到 11)
-   * @param {number} index - 當前卡片的陣列索引
-   * @returns {number} - CSS 變數 --i 的值
-   */
-  const getCardIndex = (index) => {
-    return index - Math.floor(initialCardData.length / 2);
-  };
-
-  /**
-   * 計算卡片的初始 z-index，以確保覆蓋順序正確
-   * @param {number} index - 當前卡片的陣列索引
-   * @returns {number} - z-index 的值
-   */
-  const getCardZIndex = (index) => {
-    // z-index 應從小到大，使後面的卡片覆蓋前面的卡片
-    return index;
-  };
-
-  /**
-   * 處理卡片點擊事件 (抽牌/翻牌邏輯)
-   * @param {object} clickedCard - 被點擊的卡片資料物件
-   */
-  function handleCardClick(clickedCard) {
-    // 檢查是否已經有卡片被翻面 (鎖定狀態)
-    const isAnyFlipped = shuffledCards.value.some(card => card.isFlipped);
-    if (isAnyFlipped) {
-      return;
-    }
-
-    if (clickedCard.isDrawn) {
-      // 1. 點擊已抽出的卡片 (第二次點擊: 翻面)
-      clickedCard.isFlipped = true;
-    } else {
-      // 2. 點擊新卡片 (換牌/第一次抽取)
-
-      // 將所有卡片收回牌堆狀態 (移除 drawn 和 flipped)
-      shuffledCards.value.forEach(card => {
-        card.isDrawn = false;
-        card.isFlipped = false;
-      });
-
-      // 抽出這張新的卡片
-      clickedCard.isDrawn = true;
-    }
-  }
-
-    /**
-   * 執行洗牌和重置動作
-   */
-  function shuffleAndReset() {
-    // 將所有卡片狀態重置為初始狀態
-    const resetData = initialCardData.map(card => ({
-      ...card,
-      isDrawn: false,
-      isFlipped: false
+/**
+ * 執行洗牌和重置動作
+ */
+function shuffleAndReset() {
+    // 重置所有卡片狀態，並確保它們是從 initialCardDeck 中複製出來的
+    const resetData = initialCardDeck.value.map(card => ({
+        ...card, 
+        isDrawn: false,
+        isFlipped: false,
     }));
     
-    // 洗牌並更新響應式狀態
+    // 確保 drawnCardId 是一個已定義的 ref
+    drawnCardId.value = null; // 解鎖牌堆
+    isReadingLoading.value = false;
+    
     shuffledCards.value = shuffle(resetData);
+}
+
+/**
+ * 重置回說明畫面
+ */
+function resetToInstruction() {
+    showInstruction.value = true;
+    shuffleAndReset();
+}
+
+
+// --- 輔助函數 ---
+function shuffle(array) {
+  const arr = [...array];
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
   }
+  return arr;
+}
 
-  // --- 生命週期鉤子 ---
-  onMounted(() => {
-    // 初始化：首次載入時洗牌並渲染
-    // shuffleAndReset();
-  });
+const getCardIndex = (index) => {
+  return index - Math.floor(shuffledCards.value.length / 2);
+};
 
+const getCardZIndex = (index) => {
+  return index;
+};
 
-  
+// --- 生命週期鉤子 ---
+onMounted(async () => {
+  // 檢查登入狀態
+  authStore.checkAuth(); 
+    // *** 呼叫 API 抓取初始資料 ***
+    await fetchAllRuneData(); 
+
+    // 首次載入時，初始化牌組並洗牌 (只在資料載入成功時執行)
+    if (allRuneData.value.length > 0) {
+      initialCardDeck.value = select24RandomCards(allRuneData.value); 
+      shuffleAndReset(); 
+    }
+});
 </script>
 
 <template>
@@ -188,7 +301,6 @@
     <div v-if="isMenuOpen" @click="toggleMenu" class="shared-menu-overlay"></div>
   
 
-
     <!-- Header(shared.css)-->
     <header class="shared-header">
       <div class="header-top">
@@ -199,17 +311,29 @@
       
       <div class="shared-header-bottom">
         <button @click="toggleMenu" class="shared-menu-icon">&#9776;</button>
-          <div class="book-actions">
-            <router-link to="/member-profile" class="shared-btn-user">會員資料</router-link>
-            <a href="#" class="shared-btn-logout">登出</a> 
-          </div>
-      </div>
+        <div v-if="authStore.isAuthenticated">
+              <nav class="auth-buttons">
+              <router-link to="/member-profile" class="shared-btn-user">會員資料</router-link>
+              <a @click="handleLogout" class="shared-btn-logout">登出</a>
+              </nav>
+            </div>
+            <div v-else class="auth-content">
+              <nav class="auth-buttons">
+              <router-link to="/login" class="shared-btn-user">登入/註冊</router-link>
+              </nav>
+            </div>
+        </div>
     </header>
 
   <!-- Main -->
     <main class="runesone-main-content">
       <h1 class="runesone-title-chinese">盧恩符文：單字指引</h1>
       <h2 class="runesone-title-english">One-Rune Pull</h2>
+
+      <div v-if="isDataLoading" class="runesone-loading-box">
+          <h3>正在連結北歐諸神...</h3>
+          <p>盧恩符文資料載入中，請稍候。</p>
+      </div>
 
       <!-- 占卜方式說明 -->
       <div v-if="showInstruction" class="runesone-instruction-box">
@@ -218,14 +342,18 @@
           <p>本次占卜僅抽取「一顆」符文，直指您當前情境的核心命運建議。</p>
           <p>請在心中默想您的問題或想要專注的主題，準備好後，按下「開始占卜」。</p>
           
-          <button class="runesone-start-btn" @click="startDivination">
-              開始占卜
+          <button class="runesone-start-btn" @click="startDivination" :disabled="isDataLoading">
+            {{ isDataLoading ? '載入中...' : '開始占卜' }}
           </button>
       </div>
 
       <!-- 抽卡畫面 -->
       <div v-if="!showInstruction" class="runesone-card-shuffle-app">
-        <div class="runesone-container"  @mouseleave="isHovering = false" @mouseenter="isHovering = true">
+        <div 
+          class="runesone-container" 
+          @mouseleave="isHovering = false" 
+          @mouseenter="isHovering = true"
+        >
           <div 
             v-for="(card, index) in shuffledCards" 
             :key="card.id"
@@ -238,11 +366,15 @@
               <div class="runesone-card-face runesone-card-back">
                 <img src="/src/assets/images/RunesCard/CardBack.png" alt="卡片背面">
               </div>
+              <!-- 使用後端提供的 image 欄位 -->
               <div class="runesone-card-face runesone-card-front">
-                <img :src="card.image" :alt="`卡片正面 ${card.front}`">
+                <img :src="card.image" :alt="`卡片正面 ${card.full_name_en}`">
               </div>
             </div>
-            <div class="runesone-info-box">{{ card.info }}</div>
+            
+            <div v-if="card.isDrawn" class="runesone-info-box">
+                <pre v-if="card.isFlipped" class="runesone-info-text">{{ card.info }}</pre>
+            </div>
           </div>
         </div>
       </div>
@@ -260,34 +392,35 @@
   </div>
 
   <!-- Footer(shared.css) -->
-    <footer class="shared-footer">
-      <div class="shared-footer-content">
-        <div class="shared-footer-links">
-          <h3>快速連結</h3>
-          <ul>
-            <li><a href="#">關於我們</a></li>
-            <li><a href="#">聯絡我們</a></li>
-            <li><a href="#">常見問題</a></li>
-            <li><a href="#">隱私政策</a></li>
-          </ul>
-        </div>
+  <footer class="shared-footer">
+    <div class="shared-footer-content">
+      <div class="shared-footer-links">
+        <h3>快速連結</h3>
+        <ul>
+          <li><a href="#">關於我們</a></li>
+          <li><a href="#">聯絡我們</a></li>
+          <li><a href="#">常見問題</a></li>
+          <li><a href="#">隱私政策</a></li>
+        </ul>
+      </div>
 
-        <div class="shared-footer-social">
-          <h3>追蹤我們</h3>
-            <div class="shared-social-icons">
-              <a href="#" class="shared-social-icon">F</a> 
-              <a href="#" class="shared-social-icon">I</a>
-              <a href="#" class="shared-social-icon">T</a>
-            </div>
+      <div class="shared-footer-social">
+        <h3>追蹤我們</h3>
+          <div class="shared-social-icons">
+            <a href="#" class="shared-social-icon">F</a> 
+            <a href="#" class="shared-social-icon">I</a>
+            <a href="#" class="shared-social-icon">T</a>
           </div>
         </div>
+      </div>
 
-        <div class="shared-footer-bottom">
-          <p>&copy; {{ new Date().getFullYear() }} Divination. All rights reserved.</p>
-        </div>
-    </footer>
+      <div class="shared-footer-bottom">
+        <p>&copy; {{ new Date().getFullYear() }} Divination. All rights reserved.</p>
+      </div>
+  </footer>
 
 </template>
+
 
 <style scoped>
 @import '/src/assets/styles/shared.css';
@@ -345,8 +478,7 @@ html, body {
     color: #555;
     margin-bottom: 20px;
   }
-
-
+  
   /* --- 占卜方式說明框樣式 --- */
   .runesone-instruction-box {
     background: rgba(255, 255, 255, 0.9);
@@ -379,6 +511,35 @@ html, body {
     from { opacity: 0; transform: translateY(20px); }
     to { opacity: 1; transform: translateY(0); }
   }
+
+  .runesone-loading-box {
+    background: rgba(255, 255, 255, 0.9);
+    border-radius: 15px;
+    padding: 30px;
+    margin: 50px auto;
+    max-width: 600px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    text-align: center;
+    color: #333;
+    animation: fadeIn 0.5s ease-out;
+    min-height: 200px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .runesone-loading-box h3 {
+      color: #010305;
+      margin-bottom: 10px;
+      font-size: 24px;
+  }
+
+  .runesone-loading-box p {
+      font-size: 16px;
+      color: #555;
+  }
+
 
   /* --- 開始占卜按鈕樣式 --- */
   .runesone-start-btn {
@@ -587,28 +748,68 @@ html, body {
     height: 185px;
     background: rgba(255, 255, 255, 0.95);
     color: black;
-    padding: 20px;
+    padding: 5px;
     border-radius: 10px;
     box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
     opacity: 0;
     transition: opacity 0.3s, transform 0.5s;
     pointer-events: none;
     min-width: 300px;
-    text-align: center;
+    text-align: left;
     font-size: 1em;
     z-index: 1;
+    box-sizing: border-box; 
 }
 
-/* 翻面後顯示資訊並調整位置 */
+/* 翻面後顯示資訊 */
 .runesone-card-wrapper.drawn.flipped .runesone-info-box {
     opacity: 1;
-    --drawn-scale: 1.1; 
-    width: calc(var(--card-width) * var(--drawn-scale)); 
-    /* height: calc(var(--card-height) * var(--drawn-scale)); */
-    transform: translateX(calc(var(--card-width) * var(--drawn-scale) + 5px));
-    left: 0;
-    top: 0;
     pointer-events: auto;
+}
+
+.runesone-info-text {
+    font-size: 14px;
+    line-height: 1.5;
+    color: #333;
+    margin: 5px;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    word-break: break-all;
+    font-family: inherit; 
+}
+
+
+/* --- RWD --- */
+@media (max-width: 768px) {
+    /* 在小螢幕上，卡片垂直堆疊，資訊框移到卡片下方 */
+    .runesone-card-wrapper.drawn {
+        transform: translate(0, -20px) scale(1.3) !important; /* 移回中央 */
+    }
+
+    .runesone-info-box {
+        top: calc(var(--card-height) * 1.3 + 30px); /* 位於放大後卡片下方 30px 處 */
+        left: 50%;
+        transform: translateX(-50%);
+        width: calc(150px * 1.3); /* 資訊框寬度與卡片放大後一致 */
+        height: auto; /* 允許高度自適應 */
+    }
+
+    .runesone-card-wrapper.drawn.flipped .runesone-info-box {
+        left: 50%;
+        transform: translateX(-50%);
+    }
+
+    .runesone-container {
+        padding-bottom: 500px; /* 增加底部空間以容納資訊框 */
+        margin-top: -300px; 
+    }
+}
+
+
+/* --- Modal 相關樣式 (雖然移除了 Modal，但保留了通用動畫) --- */
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
 }
 
 

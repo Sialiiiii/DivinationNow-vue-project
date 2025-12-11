@@ -1,4 +1,5 @@
 <script setup>
+import { ref } from 'vue';
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth';
 
@@ -8,6 +9,7 @@ import RunesImg from '@/assets/images/RunesImgBanner.jpg';
 import FortuneStickImg from '@/assets/images/FortuneStickBanner.jpg';
 
 const router = useRouter()
+
 const authStore = useAuthStore();
 const handleLogout = () => {
   authStore.logout();
@@ -29,6 +31,15 @@ function goFortuneStickTwo() {
   router.push('/FortuneStickTwoDivination')
 }
 
+// -------------------- 占卜紀錄分享 --------------------
+// 假設這是從後端載入的已審核通過的占卜紀錄
+const posts = ref([
+  // 模擬留言資料
+  { id: 3, user: '用戶C', content: '今天抽到六十甲子籤，指引我感情上要更勇敢一點！心情頓時開闊了許多 😊', date: '2025/11/27 22:30' },
+  { id: 2, user: '用戶B', content: '盧恩符文的單顆占卜，給我了一個很關鍵的提示，謝謝！', date: '2025/11/27 18:45' },
+  { id: 1, user: '用戶A', content: '雙顆占卜超神準，讓我有勇氣去告白，今天是交往第一天！', date: '2025/11/27 14:00' },
+]);
+
 </script>
 
 <template>
@@ -47,7 +58,7 @@ function goFortuneStickTwo() {
         <nav class="auth-buttons">
           <router-link to="/login" class="login-btn">登入/註冊</router-link>
         </nav>
-        <p class="login-tip">※ 登入會員可自動記錄每次占卜結果</p>
+        <p class="login-tip">※ 登入會員自動記錄占卜結果</p>
       </div>
       
       <div class="banner-image-container">
@@ -66,7 +77,8 @@ function goFortuneStickTwo() {
         <p class="subtitle">
           "命運的頁面，只為你掀開。"<br><br>
           靜下心，閉上眼，默想你想要問的問題。<br>
-          當你準備好時，翻開書頁——答案將現身。
+          當你準備好時，翻開書頁——答案將現身。<br><br>
+          ** 本占卜結果不會記錄於會員資料 **
         </p>
         <button @click="goBookOfAnswers" class="shared-divination-btn">啟示現在</button>
       </div>
@@ -108,6 +120,31 @@ function goFortuneStickTwo() {
       </div>
       <img :src="FortuneStickImg" alt="FortuneStickBannerImg" class="image-placeholder-bottom">
     </main>
+
+    <!-- 留言板版位 -->
+    <section class="message-board-section">
+      <div class="message-board-header">
+        <div class="title-section">
+          <h1>心靈樹洞<br>占卜紀錄留言板</h1>
+        </div>
+        <p class="subtitle">
+          "命運的迴響，他人的啟示。"<br>
+          此處展示已獲管理者審核通過的占卜心得。您可以在「會員資料 > 占卜紀錄」中點選「發文」，您的心得經審核後將會在此處展示。
+        </p>
+      </div>
+      
+      <div class="posts-list">
+        <div v-for="post in posts" :key="post.id" class="post-card">
+          <div class="post-meta">
+            <span class="post-user">🧙‍♂️ {{ post.user }}</span>
+            <span class="post-date">{{ post.date }}</span>
+          </div>
+          <p class="post-content">{{ post.content }}</p>
+        </div>
+        <p v-if="posts.length === 0" class="no-posts">目前還沒有通過審核的分享喔！</p>
+      </div>
+    </section>
+
 
     <!-- Footer版位 -->
     <div id="app-container">
@@ -322,6 +359,90 @@ display: flex;
   margin-right: 0;
 }
 
+
+/* -------------------- 占卜紀錄分享展示區塊 -------------------- */
+.message-board-section {
+  margin: 80px 80px; 
+  padding: 50px;
+  background-color: #f7f7f7; 
+  border-radius: 15px;
+  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.05);
+  display: flex;
+  flex-direction: column;
+}
+
+.message-board-header {
+  margin-bottom: 30px;
+  text-align: center;
+}
+
+.message-board-header .title-section h1 {
+  font-size: 2.8rem;
+  margin-bottom: 10px;
+}
+
+.message-board-header .subtitle {
+  font-size: 1.05rem;
+  color: #555;
+  margin-bottom: 0;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+/* 留言卡片列表 */
+.posts-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); /* RWD 網格佈局 */
+  gap: 25px;
+  padding-top: 20px; /* 列表與標題之間增加一點間距 */
+}
+
+.post-card {
+  background-color: white;
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  border-left: 5px solid #a3ccff; /* 裝飾邊條 */
+  transition: transform 0.2s;
+}
+
+.post-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.15);
+}
+
+.post-meta {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 10px;
+  padding-bottom: 5px;
+  border-bottom: 1px dashed #eee;
+  font-size: 0.9rem;
+}
+
+.post-user {
+  font-weight: bold;
+  color: #335d94;
+}
+
+.post-date {
+  color: #999;
+}
+
+.post-content {
+  margin: 0;
+  line-height: 1.6;
+  color: #333;
+  white-space: pre-wrap; /* 保留換行 */
+}
+
+.no-posts {
+    text-align: center;
+    grid-column: 1 / -1; /* 跨越所有列 */
+    padding: 30px;
+    color: #888;
+}
+
 /* -------------------- Footer -------------------- */
 .app-footer {
   margin-top: auto; 
@@ -467,8 +588,14 @@ display: flex;
     max-width: 960px;
     padding: 0 40px 40px;
   }
+  .message-board-section {
+    margin: 60px 40px; 
+    padding: 40px;
+  }
+  .posts-list {
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  }
 }
-
 
 @media (max-width: 1046px) {
   .main-title {
@@ -609,6 +736,20 @@ display: flex;
   
   .footer-bottom {
     padding: 15px 20px;
+  }
+
+  .message-board-section {
+    margin: 30px 20px; 
+    padding: 20px;
+  }
+  
+  .message-board-header .title-section h1 {
+    font-size: 2rem;
+  }
+  
+  .posts-list {
+    grid-template-columns: 1fr; /* 768px 以下改為單欄 */
+    gap: 15px;
   }
 }
 

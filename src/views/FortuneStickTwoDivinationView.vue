@@ -1,7 +1,7 @@
 <template>
   <div class="TheBookOfAnswersDivination">
     <h1>雷雨師​一百籤</h1>
-    <p>這裡是進行占卜的地方。</p>
+    <p>Coming soon...</p>
     <router-link to="/">回到首頁</router-link>
   </div>
 </template>

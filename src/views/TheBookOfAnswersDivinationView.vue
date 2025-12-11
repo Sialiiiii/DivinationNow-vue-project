@@ -1,26 +1,16 @@
 <script setup>
-  import { ref } from 'vue';
+  import { ref, onMounted } from 'vue';
   import { useRouter } from 'vue-router'
   import { useAuthStore } from '@/stores/auth';
+  import { getBookAnswers } from '@/services/bookOfAnswers';
 
   const router = useRouter()
   const authStore = useAuthStore();
   const handleLogout = () => {
     authStore.logout();
   };
-  
-  // 假資料
-    const ANSWERS = [
-      "是的，毫無疑問",
-      "現在不是時候",
-      "保持觀望",
-      "依你的心意而行",
-      "這並不是一個好主意",
-      "問得好",
-      "專注並再試一次", 
-      "結果會令你滿意", 
-      "一夕暴富",
-    ];
+
+  const allAnswers = ref([]);
 
   // --- 漢堡選單 ---
   const isMenuOpen = ref(false); 
@@ -59,14 +49,45 @@
   const hasStarted = ref(false); // 控制顯示說明還是結果
   const currentAnswer = ref(''); // 儲存當前的占卜結果
   const isLoading = ref(false); // 控制等待效果
+  const isDataLoading = ref(true); // 新增：用於表示答案資料是否正在載入
 
   /**
-   * 隨機從答案列表中選取一個結果
-   */
-  const getRandomAnswer = () => {
-    const randomIndex = Math.floor(Math.random() * ANSWERS.length);
-    return ANSWERS[randomIndex];
+   * 從 API 抓取解答之書的答案列表
+   */
+  const fetchAnswers = async () => {
+    isDataLoading.value = true;
+    try {
+      // 假設 getBookAnswers 呼叫您的後端並返回圖片中結構的陣列
+      const response = await getBookAnswers(); 
+      allAnswers.value = response; // 儲存整個答案物件陣列
+    } catch (error) {
+      console.error("Error fetching book answers:", error);
+      // 可以在這裡處理錯誤，例如顯示錯誤訊息給使用者
+    } finally {
+        isDataLoading.value = false;
+    }
   };
+
+  // 在元件掛載後執行抓取資料
+  onMounted(() => {
+    fetchAnswers();
+  });
+
+
+/**
+ * * 隨機從答案列表中選取一個結果
+ * */
+  const getRandomAnswer = () => {
+    if (allAnswers.value.length === 0) {
+      return "抱歉，目前無法取得答案。"; // 處理資料為空的情況
+    }
+    // 從 allAnswers 中隨機選取一個答案物件
+    const randomIndex = Math.floor(Math.random() * allAnswers.value.length);
+    // 根據圖片中的資料庫欄位，取得 answer_content
+    return allAnswers.value[randomIndex].answer_content; 
+  };
+
+
 
   /**
    * 開始占卜的邏輯：切換畫面並產生結果
@@ -86,8 +107,8 @@
     // 設置一個短暫的延遲，模擬翻書的過程
     setTimeout(() => {
       currentAnswer.value = getRandomAnswer();
-      isLoading.value = false; // 結束等待動畫
-    }, 1200); // 延遲 1.2 秒，讓動畫更明顯
+      isLoading.value = false;
+    }, 1000); // 延遲1秒
   };
 
   /**
@@ -105,7 +126,6 @@
       currentAnswer.value = '';
       isLoading.value = false;
   };
-
   
 </script>
 
@@ -143,11 +163,7 @@
         
         <div class="shared-header-bottom">
             <button @click="toggleMenu" class="shared-menu-icon">&#9776;</button>
-            <!-- <div class="book-actions">
-                <router-link to="/member-profile" class="shared-btn-user">會員資料</router-link>
-                <a href="#" class="shared-btn-logout">登出</a> 
-            </div> -->
-            <div v-if="authStore.isAuthenticated" class="book-actions">
+            <div v-if="authStore.isAuthenticated">
               <nav class="auth-buttons">
               <router-link to="/member-profile" class="shared-btn-user">會員資料</router-link>
               <a @click="handleLogout" class="shared-btn-logout">登出</a>
@@ -157,7 +173,7 @@
               <nav class="auth-buttons">
               <router-link to="/login" class="shared-btn-user">登入/註冊</router-link>
               </nav>
-              <p class="login-tip">※ 登入會員可自動記錄每次占卜結果</p>
+
             </div>
         </div>
     </header>
@@ -165,6 +181,11 @@
     <main class="book-main-content">
       <h1 class="book-title-chinese">解答之書</h1>
       <h2 class="book-title-english">The Book Of Answers</h2>
+
+      <div v-if="isDataLoading" class="book-card book-loading-data">
+        <h3 class="book-card-title">正在準備解答之書...</h3>
+        <p class="book-loading-text">請稍候，答案資料載入中。</p>
+      </div>
 
       <section class="book-card">
 
@@ -198,8 +219,8 @@
         <button 
           v-if="!hasStarted" 
           @click="startFortune" 
-          class="shared-divination-btn book-btn-primary">
-          開始占卜
+          :disabled="isDataLoading"  class="shared-divination-btn book-btn-primary">
+          {{ isDataLoading ? '載入中...' : '開始占卜' }}
         </button>
 
         <button 
@@ -363,6 +384,38 @@
     font-size: 18px;
     color: #8a70ff;
     animation: pulse 1.5s infinite;
+    margin-top: 20px;
+  }
+
+  /* 用於顯示答案資料載入中的區塊，與 book-card 共用基礎樣式 */
+  .book-loading-data {
+    /* 沿用 book-card 的外觀，但可以增加一些載入中的視覺提示 */
+    min-height: 200px; /* 確保內容顯示時有足夠空間 */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 40px;
+  }
+
+  /* 確保載入中的標題清晰 */
+  .book-loading-data .book-card-title {
+    color: #555;
+    margin-bottom: 10px;
+  }
+
+  /* 脈衝動畫 (Pulse Animation) */
+  @keyframes pulse {
+    0% {
+      opacity: 0.6;
+    }
+    50% {
+      opacity: 1;
+    }
+    100% {
+      opacity: 0.6;
+    }
   }
 
   .book-fortune-result {
@@ -380,6 +433,8 @@
     align-items: center;
     margin-bottom: 100px;
   }
+
+
 
   /* 回到說明頁 */
   .book-btn-back {
