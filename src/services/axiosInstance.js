@@ -1,22 +1,19 @@
-// src/services/axiosInstance.js (最穩定版本)
-
 import axios from 'axios';
-import { useAuthStore } from '@/stores/auth'; // 🚀 關鍵 1: 正常靜態導入 useAuthStore 函式
-import router from '@/router'; // 如果您有獨立的 router 實例，也建議引入
+import { useAuthStore } from '@/stores/auth'; 
+import router from '@/router';
 
-let isAlerting = false; // 用於防止多次彈出警告
+let isAlerting = false; // 防止多次彈出警告
 
 const axiosInstance = axios.create({
     baseURL: '/api', 
     headers: {
         'Content-Type': 'application/json',
     },
-    // ✅ 確保 Session 模式的關鍵設定
     withCredentials: true 
 });
 
 /**
- * 請求攔截器 (保持原樣，不需傳遞 JWT)
+ * 請求攔截器
  */
 axiosInstance.interceptors.request.use(config => {
     return config;
@@ -29,13 +26,9 @@ axiosInstance.interceptors.request.use(config => {
  */
 axiosInstance.interceptors.response.use(response => response, error => {
     
-    // 🚀 關鍵 2: 在攔截器內部，直接呼叫 useAuthStore() 取得實例
-    // 這是 Pinia 在 Vue 應用程式中推薦的用法。
-    // 由於攔截器只在 API 請求發生時運行，這比在模組頂層呼叫安全得多。
     const status = error.response ? error.response.status : null;
     
     if (status === 401) {
-        // 取得 Pinia 實例
         const authStore = useAuthStore();
         
         console.error("Session Unauthorized or Expired. Logging out...");

@@ -10,6 +10,10 @@ const handleLogout = () => {
   authStore.logout();
 };
 
+if (!router) {
+  console.error('Router is not available!')
+}
+
 // --- 狀態管理 ---
 const divinationStep = ref('instruction'); 
 const isMenuOpen = ref(false); 
@@ -28,7 +32,7 @@ const isDrawStickPhase = computed(() => divinationStep.value === 'draw_stick');
 
 // --- 漢堡選單 ---
 const goHome = () => {
-      isMenuOpen.value = false; // 關閉選單
+      isMenuOpen.value = false;
       router.push('/');
   }
 
@@ -91,7 +95,7 @@ function resetToInstruction() {
 }
 
 /**
- * 模擬擲筊動作 (保持不變)
+ * 擲筊動作
  */
 function tossPai() {
   const pai1 = Math.round(Math.random());
@@ -118,7 +122,7 @@ function handlePaiToss() {
 }
 
 /**
- * 抽取籤詩 (使用 API 數據)
+ * 抽取籤詩(API數據)
  */
 async function drawStick() {
  if (drawnStick.value || allSticks.value.length === 0) return; 
@@ -128,41 +132,37 @@ async function drawStick() {
  
  drawnStick.value = stick;
 
-  // 🚀 關鍵修正點：紀錄占卜結果
+  // 紀錄占卜結果
   if (authStore.isAuthenticated) {
-        try {
-            // 🚀 修正點：不再需要獲取 userId，因為後端會自動注入
-            const signId = drawnStick.value.id; // 籤詩的 PK
-            
-            if (signId) {
-                // 🚀 修正點：只傳遞 signId
-                const logResult = await saveJiaziSignLog(signId); 
-                console.log('[紀錄成功] 六十甲子籤紀錄完成。Log ID:', logResult.log_id);
-            } else {
-                console.warn('[記錄失敗] 缺少籤詩 ID。');
-            }
-        } catch (error) {
-            console.error('[記錄失敗] 寫入甲子籤紀錄時發生錯誤:', error);
-        }
+    try {
+      const signId = drawnStick.value.id;
+      if (signId) {
+        const logResult = await saveJiaziSignLog(signId); 
+        console.log('[紀錄成功] 六十甲子籤紀錄完成。Log ID:', logResult.log_id);
+      } else {
+        console.warn('[記錄失敗] 缺少籤詩 ID。');
+      }
+    } catch (error) {
+      console.error('[記錄失敗] 寫入甲子籤紀錄時發生錯誤:', error);
     }
+  } else {
+    console.log('[未登入] 占卜結果未記錄。');
+  }
 
-
-  // 顯示結果框
   setTimeout(() => {
     showResultModal.value = true;
   }, 1500); 
 }
 
 /**
- * 重新開始占卜 (從結果框)
+ * 重新開始占卜
  */
 function closeResultModal() {
   showResultModal.value = false;
-  // 重置回擲筊階段，讓使用者重新提問和擲筊
   startDivination(); 
 }
 
-// --- 生命週期鉤子 (保持不變) ---
+// --- 生命週期鉤子 ---
 onMounted(() => {
  fetchSticksData(); 
  resetToInstruction();
@@ -193,18 +193,28 @@ onMounted(() => {
 
     <div v-if="isMenuOpen" @click="toggleMenu" class="shared-menu-overlay"></div>
 
+    <!-- Header(shared.css)-->
     <header class="shared-header">
       <div class="header-top">
         <div class="shared-logo">DIVINATION.NOW</div>
       </div>
+      
       <div class="shared-header-divider"></div>
+      
       <div class="shared-header-bottom">
         <button @click="toggleMenu" class="shared-menu-icon">&#9776;</button>
-          <div class="book-actions">
-            <router-link to="/member-profile" class="shared-btn-user">會員資料</router-link>
-            <a href="#" class="shared-btn-logout">登出</a>
-          </div>
-      </div>
+        <div v-if="authStore.isAuthenticated">
+              <nav class="auth-buttons">
+              <router-link to="/member-profile" class="shared-btn-user">會員資料</router-link>
+              <a @click="handleLogout" class="shared-btn-logout">登出</a>
+              </nav>
+            </div>
+            <div v-else class="auth-content">
+              <nav class="auth-buttons">
+              <router-link to="/login" class="shared-btn-user">登入/註冊</router-link>
+              </nav>
+            </div>
+        </div>
     </header>
 
     <main class="fortunestick-main-content">
@@ -499,11 +509,11 @@ onMounted(() => {
     .fortunestick-pai-image {
         width: 100px;
         height: auto;
-        opacity: 0.5; /* 初始較暗 */
+        opacity: 0.5;
     }
 
     .fortunestick-pai-display.has-result .fortunestick-pai-image {
-        opacity: 1; /* 擲筊後變亮 */
+        opacity: 1;
     }
 
     .fortunestick-result-message {

@@ -1,10 +1,6 @@
-// src/services/api/runesTwo.js
+import axiosInstance from './axiosInstance';
 
-import axios from 'axios';
-// 假設您在 src/services/api/runes.js 中定義了 fetchRuneData
-// import { fetchRuneData } from './runes'; // 需確保路徑正確
-
-const API_URL = '/api/divination'; 
+const API_URL = '/divination'; 
 
 /**
  * [GET] 獲取符文特定解讀 (對應 specific_rune_readings)
@@ -16,7 +12,7 @@ const API_URL = '/api/divination';
  */
 export const fetchSpecificRuneReading = async (orientationId, statusId, position) => {
     try {
-        const response = await axios.get(`${API_URL}/runes/reading`, {
+        const response = await axiosInstance.get(`${API_URL}/runes/reading`, {
             params: {
                 orientation_id: orientationId,
                 status_id: statusId,
@@ -24,7 +20,7 @@ export const fetchSpecificRuneReading = async (orientationId, statusId, position
             }
         });
         
-        // 預期後端返回 SpecificRuneReading 物件 (驼峰命名)
+        // 預期後端返回 SpecificRuneReading 物件
         return { 
             interpretation_text: response.data.interpretationText 
         }; 
@@ -65,13 +61,12 @@ export const saveRuneDoubleLog = async (userId, rune1OrientationId, rune2Orienta
         user_id: userId,
         rune1_orientation_id: rune1OrientationId,
         rune2_orientation_id: rune2OrientationId,
-        // 傳遞分解後的 ID，未使用的為 null
         user_career_status_id: careerId, 
         user_relationship_status_id: relationshipId,
     };
     
     try {
-        const response = await axios.post(`${API_URL}/runes/double-log`, payload);
+        const response = await axiosInstance.post(`${API_URL}/runes/double-log`, payload);
         return response.data; 
     } catch (err) {
         console.error("Error saving rune double log:", err);

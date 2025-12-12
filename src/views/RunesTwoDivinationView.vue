@@ -4,7 +4,7 @@ import { useRouter } from 'vue-router';
 import { useAuthStore } from '../stores/auth'; 
 import { useDivinationStore } from '../stores/divination'; 
 
-// *** 1. 引入 API 服務 ***
+// *** 引入 API 服務 ***
 import { fetchRuneData } from '@/services/runes'; // 引入基礎符文資料 (rune_orientation)
 import { fetchSpecificRuneReading, saveRuneDoubleLog } from '@/services/runesTwo'; // 引入雙顆專屬 API
 
@@ -74,13 +74,12 @@ async function fetchAllRuneData() {
   try {
     const apiData = await fetchRuneData(); 
 
-    // 🚀 修正點：確保所有需要的名稱欄位加入 formattedData
     const formattedData = apiData.map(item => ({
       id: item.orientation_id, 
       original_orientation_id: item.orientation_id, 
-      full_name_zh: item.full_name_zh, // 確保中文名存在
-      full_name_en: item.full_name_en, // 確保英文名存在
-      front: item.full_name_zh, // 顯示中文名 (用於卡片正面暫存)
+      full_name_zh: item.full_name_zh,
+      full_name_en: item.full_name_en,
+      front: item.full_name_zh,
       image: item.rune_image_url, 
       isReversed: item.is_reversed === 1, 
       general_meaning: item.rune_general_meaning, 
@@ -108,24 +107,21 @@ async function saveDoubleDivinationRecord(rune1Id, rune2Id, statusId) {
     console.log('[未登入] 占卜結果未記錄。');
     return;
   }
-  // 🚀 修正點：確保獲取 user_id (假設您的 authStore 中有 user.user_id 欄位)
-  const userId = authStore.user?.user_id; 
-  if (!userId) {
-    console.error('[紀錄失敗] 缺少 user_id。');
-    return;
-  }
-
-  try {
-    // 呼叫 API 服務
-    const result = await saveRuneDoubleLog(userId, rune1Id, rune2Id, statusId);
-    console.log(`[紀錄成功] 雙顆符文紀錄完成。Log ID: ${result.log_id || 'N/A'}`);
-  } catch (error) {
-    console.error(`[紀錄失敗] 發生錯誤:`, error);
-  }
+  try {
+      const specificReadingId = card.specific_reading_id; 
+      if (orientationId) {
+        const result = await saveRuneDoubleLog(userId, rune1Id, rune2Id, statusId); 
+        console.log('[紀錄成功] 盧恩符文雙指引紀錄完成。Log ID:', result.log_id);
+      } else {
+          console.warn('[記錄失敗] 缺少盧恩符文雙指引解讀 ID。');
+      }
+    } catch (error) {
+      console.error(`[記錄失敗] 寫入盧恩符文雙指引紀錄時發生錯誤:`, error);
+    }
 }
 
 /**
-* 【API 串接點 】實際發 API 查詢符文解釋
+* 【API 串接點】實際發 API 查詢符文解釋
 * @param {number} orientationId - 符文正逆位 ID (card.original_orientation_id)
 * @param {number} statusId - 狀態 ID (INT)
 * @param {number} position - 牌位: 1=現況/基礎, 0=建議/指引
@@ -137,14 +133,14 @@ async function fetchRuneReading(orientationId, statusId, position) {
     // 組合牌位名稱和狀態中文標籤
     const positionName = position === 1 ? '現況/基礎' : '建議/指引';
     
-    // 這裡 runeData 必須包含 full_name_zh, full_name_en 等屬性 (已在 fetchAllRuneData 修正)
+    // 這裡 runeData 必須包含 full_name_zh, full_name_en 等屬性
     const runeData = allRuneData.value.find(r => r.original_orientation_id === orientationId);
     
-        // 🚀 偵錯點：輸出 runeData 內容，檢查 full_name_zh 是否存在
+        // 🚀 輸出 runeData 內容，檢查 full_name_zh 是否存在
         console.log(`DEBUG: Rune Data for ID ${orientationId}:`, runeData);
 
     const orientation = runeData?.isReversed ? '逆位 (R)' : '正位 (U)';
-    const runeName = runeData?.full_name_zh || '未知符文'; // 使用修正後的 runeName
+    const runeName = runeData?.full_name_zh || '未知符文'; 
     
     // 檢查是否有特定解讀 (response.interpretation_text)
     const interpretation = response.interpretation_text || runeData?.general_meaning || '目前無特定解讀，請參考通用解釋。';
@@ -167,7 +163,7 @@ ${interpretation}
 // --- 流程控制函數 ---
 
 function startDivination() {
- // *** 新增檢查：如果資料未載入完成，則不開始 ***
+ // 如果資料未載入完成，則不開始
  if (isDataLoading.value || allRuneData.value.length === 0) {
    console.warn("Rune data not loaded yet. Cannot start divination.");
    return;
@@ -233,7 +229,7 @@ async function handleCardClick(clickedCard) {
   await new Promise(resolve => setTimeout(resolve, 1500)); 
 
   try {
-   const statusId = divStore.chosenStatus; // 使用 Status ID
+   const statusId = divStore.chosenStatus;
    if (!statusId) {
     console.error("錯誤：Status ID 未設定，無法查詢。");
     isReadingLoading.value = false;
@@ -248,7 +244,7 @@ async function handleCardClick(clickedCard) {
    const results = await Promise.all([
     // 第一張牌：現況/基礎 (position = 1)
     fetchRuneReading(rune1OrientationId, statusId, 1),
-    // 第二張牌：建議/指引 (position = 2) 🚀 關鍵修正點：修正為資料庫期望的 2
+    // 第二張牌：建議/指引 (position = 2)
     fetchRuneReading(rune2OrientationId, statusId, 2)
    ]);
 
@@ -283,12 +279,12 @@ function shuffleAndReset() {
   ...card,
   isDrawn: false,
   isFlipped: false,
-  readingText: null // 重置解釋
+  readingText: null
  }));
 
  drawnCards.value = [];
  showResultModal.value = false;
- isReadingLoading.value = false; // 重置加載狀態
+ isReadingLoading.value = false;
 
  shuffledCards.value = shuffle(resetData);
 }
@@ -339,7 +335,6 @@ onMounted(async () => {
  authStore.checkAuth();
  await fetchAllRuneData(); 
 
- // 如果資料抓取成功，則初始化洗牌
  if (allRuneData.value.length > 0) {
   shuffleAndReset(); 
  }

@@ -63,7 +63,7 @@ const goFortuneStickTwo = () => {
 // --- 邏輯函數 ---
 
 /**
- * [NEW] 從 API 抓取完整的符文資料
+ * 從 API 抓取完整的符文資料
  */
 async function fetchAllRuneData() {
     isDataLoading.value = true;
@@ -121,12 +121,12 @@ function startDivination() {
     }
     showInstruction.value = false;
     // 每次開始前重新選取24張並洗牌
-    initialCardDeck.value = select24RandomCards(allRuneData.value); // *** 使用 API 資料 ***
+    initialCardDeck.value = select24RandomCards(allRuneData.value); // 使用 API 資料
     shuffleAndReset();
 }
   
 /**
- * 【API 串接點 】模擬將占卜結果記錄到會員資料
+ * 【API 串接 】占卜結果記錄到會員資料
  */
 async function saveDivinationRecord(card, finalReadingText) {
   if (!authStore.isAuthenticated) {
@@ -134,27 +134,15 @@ async function saveDivinationRecord(card, finalReadingText) {
     return;
   }
   try {
-    // 必須使用 user.user_id 來獲取 Long 類型的 ID
-    const userId = authStore.user?.user_id; 
-    // 這是 rune_orientation_id
     const orientationId = card.original_orientation_id; 
-    
-    // 🚀 關鍵修正點：單顆占卜不涉及主題/狀態 ID，傳遞 0 或 null
-    const statusId = 0; 
-    
-      if (!userId || !orientationId) {
-          console.error('[記錄失敗] 缺少 user_id 或符文 ID。');
-          return;
-      }
-
-    console.log(`[記錄點] 會員 ${userId} 正在記錄單顆符文占卜結果...`);
-
-      // *** 呼叫 API 紀錄 ***
-    // 🚀 修正點：傳遞 statusId 參數
-    const result = await saveRuneLog(userId, orientationId, statusId); 
-    console.log(`[記錄成功] 占卜紀錄已完成。Log ID: ${result.log_id || 'N/A'}`);
-  } catch (error) {
-    console.error(`[記錄失敗] 發生錯誤:`, error);
+    if (orientationId) {
+      const result = await saveRuneLog(orientationId); 
+      console.log('[紀錄成功] 盧恩符文單指引紀錄完成。Log ID:', result.log_id);
+    } else {
+        console.warn('[記錄失敗] 缺少盧恩符文單指引解讀 ID。');
+    }
+  } catch (error) {
+    console.error(`[記錄失敗] 寫入盧恩符文單指引紀錄時發生錯誤:`, error);
   }
 }
 
@@ -210,7 +198,7 @@ async function handleCardClick(clickedCard) {
         // 寫入卡片 info 欄位 (顯示結果)
         clickedCard.info = finalReadingText; 
         
-        // 嘗試儲存紀錄 (API 記錄)
+        // 嘗試儲存紀錄 (API記錄)
         await saveDivinationRecord(clickedCard, finalReadingText); 
         
         isReadingLoading.value = false;
@@ -264,9 +252,8 @@ const getCardZIndex = (index) => {
 
 // --- 生命週期鉤子 ---
 onMounted(async () => {
-  // 檢查登入狀態
   authStore.checkAuth(); 
-    // *** 呼叫 API 抓取初始資料 ***
+    // 呼叫 API 抓取初始資料
     await fetchAllRuneData(); 
 
     // 首次載入時，初始化牌組並洗牌 (只在資料載入成功時執行)
@@ -448,7 +435,6 @@ html, body {
     display: flex;
     flex-direction: column;
     align-items: center;
-    /* background-color: #EFEFF0; */
     color: #222;
     min-height: 100vh;
     width: 100%;
@@ -806,7 +792,7 @@ html, body {
 }
 
 
-/* --- Modal 相關樣式 (雖然移除了 Modal，但保留了通用動畫) --- */
+/* --- Modal 相關樣式 (保留通用動畫) --- */
 @keyframes fadeIn {
     from { opacity: 0; }
     to { opacity: 1; }
