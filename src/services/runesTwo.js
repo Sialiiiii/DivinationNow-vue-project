@@ -37,20 +37,17 @@ export const fetchSpecificRuneReading = async (orientationId, statusId, position
 
 /**
  * [POST] 記錄盧恩雙顆占卜結果 (寫入 rune_double_logs)
- * 註：後端 Controller 會將這兩個 ID 寫入 rune_double_logs
- * @param {number} userId - 登入者的 user_id
+ * ⭐ 修正簽名：移除 userId
  * @param {number} rune1OrientationId - 第一張牌 (現況/基礎) 的 orientation_id
  * @param {number} rune2OrientationId - 第二張牌 (建議/指引) 的 orientation_id
  * @param {number} statusId - 使用者選擇的狀態 ID (來自 divStore.chosenStatus)
- * @returns {Promise<{ message: string, log_id: number }>} 
+ * @returns {Promise<DivinationLog>} 
  */
-export const saveRuneDoubleLog = async (userId, rune1OrientationId, rune2OrientationId, statusId) => {
+export const saveRuneDoubleLog = async (rune1OrientationId, rune2OrientationId, statusId) => { 
     
     let careerId = null;
     let relationshipId = null;
 
-    // 🚀 關鍵修正點：根據 statuses 表格 ID 範圍假設 (1-4 事業, 5-8 感情) 進行分配
-    // 這是前端 Service 必須進行的業務判斷，以匹配後端 Entity 欄位
     if (statusId >= 1 && statusId <= 4) { 
         careerId = statusId;
     } else if (statusId >= 5 && statusId <= 8) { 
@@ -58,14 +55,15 @@ export const saveRuneDoubleLog = async (userId, rune1OrientationId, rune2Orienta
     }
     
     const payload = {
-        user_id: userId,
-        rune1_orientation_id: rune1OrientationId,
-        rune2_orientation_id: rune2OrientationId,
+        // ❌ 移除 user_id 欄位，由後端從 Spring Security 安全獲取
+        rune1_specific_reading_id: rune1OrientationId, 
+        rune2_specific_reading_id: rune2OrientationId,
         user_career_status_id: careerId, 
         user_relationship_status_id: relationshipId,
     };
     
     try {
+        // ⭐ 修正端點：使用 /runes/double-log
         const response = await axiosInstance.post(`${API_URL}/runes/double-log`, payload);
         return response.data; 
     } catch (err) {

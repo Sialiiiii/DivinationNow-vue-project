@@ -101,23 +101,26 @@ async function fetchAllRuneData() {
 
 /**
 * [NEW] 紀錄雙顆符文占卜結果
+* ⭐ 修正簽名：移除 userId，只依賴卡片 ID 和狀態 ID
 */
-async function saveDoubleDivinationRecord(rune1Id, rune2Id, statusId) {
+async function saveDoubleDivinationRecord(rune1Id, rune2Id, statusId) { 
   if (!authStore.isAuthenticated) {
     console.log('[未登入] 占卜結果未記錄。');
     return;
   }
-  try {
-      const specificReadingId = card.specific_reading_id; 
-      if (orientationId) {
-        const result = await saveRuneDoubleLog(userId, rune1Id, rune2Id, statusId); 
-        console.log('[紀錄成功] 盧恩符文雙指引紀錄完成。Log ID:', result.log_id);
-      } else {
-          console.warn('[記錄失敗] 缺少盧恩符文雙指引解讀 ID。');
-      }
-    } catch (error) {
-      console.error(`[記錄失敗] 寫入盧恩符文雙指引紀錄時發生錯誤:`, error);
-    }
+  try {
+      // ⭐ 修正：檢查必要的卡片和狀態 ID
+      if (rune1Id && rune2Id && statusId) {
+        // ⭐ 呼叫 Service：只傳遞卡片 ID 和狀態 ID
+        const result = await saveRuneDoubleLog(rune1Id, rune2Id, statusId); 
+        console.log('[紀錄成功] 盧恩符文雙指引紀錄完成。Log ID:', result.logId); 
+      } else {
+          // 錯誤發生在這裡，可能因為 rune1Id, rune2Id 或 statusId 為 null
+          console.warn('[記錄失敗] 缺少必要的 ID 參數。'); 
+      }
+    } catch (error) {
+      console.error(`[記錄失敗] 寫入盧恩符文雙指引紀錄時發生錯誤:`, error);
+    }
 }
 
 /**
@@ -252,6 +255,7 @@ async function handleCardClick(clickedCard) {
    drawnCards.value[0].readingText = results[0];
    drawnCards.value[1].readingText = results[1];
 
+   
    // *** 紀錄 API 呼叫 (在結果出來後執行) ***
    await saveDoubleDivinationRecord(rune1OrientationId, rune2OrientationId, statusId);
 
