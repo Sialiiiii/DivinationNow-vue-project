@@ -1,11 +1,14 @@
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed } from 'vue'; // ⭐ 新增 computed
 import { useRouter } from 'vue-router';
 import axios from 'axios';
 import { useAuthStore } from '@/stores/auth';
 
-import UserProfileCard from '../components/Member/UserProfileCard.vue';
-import DivinationHistoryTable from '../components/Member/DivinationHistoryTable.vue';
+// ⭐ 關鍵：確保引入所有的 API 服務，並避免與本地函數名衝突
+import { fetchMemberData as apiFetchMemberData, fetchAllStatuses, updateProfile } from '@/services/user.js';
+
+import UserProfileCard from '@/components/Member/UserProfileCard.vue';
+import DivinationHistoryTable from '@/components/Member/DivinationHistoryTable.vue';
 
 const router = useRouter();
 const isMenuOpen = ref(false); 
@@ -14,6 +17,20 @@ const authStore = useAuthStore();
 // 用於儲存後端獲取的真實資料
 const userData = ref(null); 
 const historyRecords = ref([]); 
+// ⭐ 新增狀態數據儲存
+const allStatuses = ref([]); 
+
+// ⭐ 計算屬性：過濾出事業狀態 (供 UserProfileCard 使用)
+const careerStatuses = computed(() => {
+    // 過濾出 type 為 'Career' 的狀態
+    return allStatuses.value.filter(s => s.type === 'Career');
+});
+
+// ⭐ 計算屬性：過濾出感情狀態 (供 UserProfileCard 使用)
+const relationshipStatuses = computed(() => {
+    // 過濾出 type 為 'Relationship' 的狀態
+    return allStatuses.value.filter(s => s.type === 'Relationship');
+});
 
 // 創建專用的 axios 實例（避免污染全域）
 const apiClient = axios.create({
@@ -59,7 +76,7 @@ const goHome = () => {
 };
 const goBookOfAnswers = () => { 
   isMenuOpen.value = false; 
-  resetToInstruction(); 
+  router.push('/TheBookOfAnswersDivination')
 };
 const goRunesOne = () => { 
   isMenuOpen.value = false; 
@@ -78,30 +95,49 @@ const goFortuneStickTwo = () => {
   router.push('/FortuneStickTwoDivination'); 
 };
 
-// 資料獲取
-const fetchMemberData = async () => {
+// 資料獲取：現已包含會員資料和狀態選項
+const loadMemberData = async () => { // ⭐ 重新命名為 loadMemberData 避免與 import 衝突
   try {
-    // 🚀 關鍵修正 4: 移除所有前端 Token 檢查，直接依賴 Session Cookie
-    // 瀏覽器會自動帶上 Session Cookie，後端會判斷是否授權
-
-    // 使用專用的 axios 實例並行請求
-    const [userResponse, recordsResponse] = await Promise.all([
-      apiClient.get('/user/profile'),
+    // 1. 獲取用戶資料和歷史紀錄
+    const [userResponse, recordsResponse] = await Promise.all([
+      apiFetchMemberData(), // ⭐ 使用從 API 導入的 fetchMemberData
       apiClient.get('/divination/history')
     ]);
 
+    // 2. 獲取所有狀態選項
+    const statusResponse = await fetchAllStatuses(); // ⭐ 新增：獲取狀態選項
+
     // 更新前端狀態
-    userData.value = userResponse.data;
+    userData.value = userResponse; // API 函數通常會返回 data，這裡假設它返回 data
+    allStatuses.value = statusResponse; // ⭐ 更新狀態選項
     historyRecords.value = recordsResponse.data.records || [];
     console.log('Member data loaded successfully.');
 
   } catch (error) {
-    // 錯誤處理：如果不是 401 (已在攔截器處理)，則顯示其他錯誤
+    // ... (錯誤處理保持不變)
     if (error.response?.status !== 401) {
-      console.error('Error fetching member data:', error);
-      alert(`載入會員資料失敗: ${error.message || '網路錯誤'}`);
+      console.error('Error fetching member data:', error);
+      alert(`載入會員資料失敗: ${error.message || '網路錯誤'}`);
     }
   }
+};
+
+// ⭐ 新增：處理 UserProfileCard 發來的更新請求
+const handleProfileUpdate = async (payload) => {
+    try {
+        // 調用 API 服務發送 PATCH 請求
+        const updatedUser = await updateProfile(payload);
+        
+        // 更新成功：用新的數據覆蓋現有數據，觸發子組件的 watch 進行更新
+        userData.value = updatedUser;
+        alert('會員資料更新成功！');
+
+    } catch (error) {
+        console.error('Failed to update user profile:', error);
+        alert('更新會員資料失敗，請檢查輸入。');
+        // 實際應用中，您可能需要重新載入或回滾數據
+        // loadMemberData(); 
+    }
 };
 
 // 處理子組件發出的更新事件
@@ -142,7 +178,7 @@ const handleUpdateQuestion = async (updatedRecord) => {
 
 // 生命週期
 onMounted(() => {
-  fetchMemberData();
+  loadMemberData(); // ⭐ 呼叫新的載入函數
 });
 </script>
 
@@ -159,7 +195,7 @@ onMounted(() => {
       </div>
       <ul class="shared-menu-links">
         <li><button @click="goHome">首頁</button></li>
-        <li><button @click="goBookOfAnswers" class="is-current">解答之書</button></li>
+        <li><button @click="goBookOfAnswers">解答之書</button></li>
         <li><button @click="goRunesOne">盧恩符文 (單顆)</button></li>
         <li><button @click="goRunesTwo">盧恩符文 (雙顆)</button></li>
         <li><button @click="goFortuneStickOne">六十甲子籤</button></li>
@@ -187,7 +223,15 @@ onMounted(() => {
       <div class="member-profile-page">
         <h2>我的會員檔案</h2>
         
-        <UserProfileCard v-if="userData" :user="userData" />
+        <UserProfileCard 
+            v-if="userData" 
+            :user="userData" 
+            
+            :careerStatuses="careerStatuses"        
+            :relationshipStatuses="relationshipStatuses" 
+            
+            @update-profile="handleProfileUpdate"
+        />
         <p v-else>正在載入個人資料...</p>
         
         <div class="divider"></div>

@@ -70,9 +70,11 @@ const cancelEdit = () => {
   <div class="user-card">
     <div class="card-header">
       <h4>歡迎回來， {{ user.username }}</h4>
-      <button v-if="!isEditing" @click="startEdit" class="edit-btn">編輯資料</button>
-      <button v-else @click="saveProfile" class="save-btn">儲存</button>
-      <button v-if="isEditing" @click="cancelEdit" class="cancel-btn">取消</button>
+      <div class="card-headerbutton">
+        <button v-if="!isEditing" @click="startEdit" class="edit-btn">編輯資料</button>
+        <button v-else @click="saveProfile" class="save-btn">儲存</button>
+        <button v-if="isEditing" @click="cancelEdit" class="cancel-btn">取消</button>
+      </div>
     </div>
 
     <div v-if="!isEditing" class="display-mode">
@@ -92,8 +94,8 @@ const cancelEdit = () => {
       <div class="field-group">
         <label>生理性別:</label>
         <select v-model="editableUser.gender">
-          <option value="Male">男性</option>
-          <option value="Female">女性</option>
+          <option value="Male">男</option>
+          <option value="Female">女</option>
         </select>
       </div>
 
@@ -131,6 +133,7 @@ const cancelEdit = () => {
   box-shadow: 0 2px 4px rgba(0,0,0,0.05);
 }
 .user-card h4 {
+  font-size: 18px;
   margin-top: 0;
   color: #333;
 }
@@ -141,6 +144,14 @@ const cancelEdit = () => {
   align-items: center;
   margin-bottom: 15px;
 }
+
+.card-headerbutton{
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  margin-bottom: 15px; 
+}
+
 .edit-btn, .save-btn, .cancel-btn {
   padding: 8px 15px;
   margin-left: 10px;
@@ -150,7 +161,7 @@ const cancelEdit = () => {
   font-weight: bold;
 }
 .edit-btn {
-  background-color: #007bff;
+  background-color: #747474;
   color: white;
 }
 .save-btn {
