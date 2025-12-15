@@ -44,6 +44,11 @@
       isMenuOpen.value = false;
       router.push('/FortuneStickTwoDivination');
   }
+  const goSanctuary = () => {
+      isMenuOpen.value = false;
+      router.push('/sanctuary');
+  }
+
 
   // 狀態管理
   const hasStarted = ref(false); // 控制顯示說明還是結果
@@ -149,6 +154,7 @@
         <li><button @click="goRunesTwo">盧恩符文 (雙顆)</button></li>
         <li><button @click="goFortuneStickOne">六十甲子籤</button></li>
         <li><button @click="goFortuneStickTwo">雷雨師百籤</button></li>
+        <li><button @click="goSanctuary">心靈樹洞</button></li>
       </ul>
     </nav>
     <div v-if="isMenuOpen" @click="toggleMenu" class="shared-menu-overlay"></div>

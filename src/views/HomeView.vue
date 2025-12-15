@@ -30,15 +30,10 @@ function goFortuneStickOne() {
 function goFortuneStickTwo() {
   router.push('/FortuneStickTwoDivination')
 }
+function goSanctuary() {
+  router.push('/sanctuary')
+}
 
-// -------------------- 占卜紀錄分享 --------------------
-// 假設這是從後端載入的已審核通過的占卜紀錄
-const posts = ref([
-  // 模擬留言資料
-  { id: 3, user: '用戶C', content: '今天抽到六十甲子籤，指引我感情上要更勇敢一點！心情頓時開闊了許多 😊', date: '2025/11/27 22:30' },
-  { id: 2, user: '用戶B', content: '盧恩符文的單顆占卜，給我了一個很關鍵的提示，謝謝！', date: '2025/11/27 18:45' },
-  { id: 1, user: '用戶A', content: '雙顆占卜超神準，讓我有勇氣去告白，今天是交往第一天！', date: '2025/11/27 14:00' },
-]);
 
 </script>
 
@@ -122,26 +117,18 @@ const posts = ref([
     </main>
 
     <!-- 留言板版位 -->
-    <section class="message-board-section">
-      <div class="message-board-header">
-        <div class="title-section">
-          <h1>心靈樹洞<br>占卜紀錄留言板</h1>
-        </div>
-        <p class="subtitle">
-          "命運的迴響，他人的啟示。"<br>
-          此處展示已獲管理者審核通過的占卜心得。您可以在「會員資料 > 占卜紀錄」中點選「發文」，您的心得經審核後將會在此處展示。
+    <section class="sanctuary-section reverse-content"> <div class="message-board-header">
+      <div class="title-section">
+          <h1 class="sanctuary-h1">心靈樹洞<br></h1> </div>
+        <p class="sanctuary-subtitle">
+            將你的迷惘、體悟，或是占卜帶給你的細微波動託付於此。<br>
+            讓思緒輕輕落地，無需隱藏，我們傾聽陪伴著你。<br>
         </p>
-      </div>
-      
-      <div class="posts-list">
-        <div v-for="post in posts" :key="post.id" class="post-card">
-          <div class="post-meta">
-            <span class="post-user">🧙‍♂️ {{ post.user }}</span>
-            <span class="post-date">{{ post.date }}</span>
-          </div>
-          <p class="post-content">{{ post.content }}</p>
+        <div class="button-center">
+            <button @click="goSanctuary" class="sanctuary-btn">
+                進入留言板
+            </button>
         </div>
-        <p v-if="posts.length === 0" class="no-posts">目前還沒有通過審核的分享喔！</p>
       </div>
     </section>
 
@@ -361,86 +348,67 @@ display: flex;
 
 
 /* -------------------- 占卜紀錄分享展示區塊 -------------------- */
-.message-board-section {
-  margin: 80px 80px; 
-  padding: 50px;
-  background-color: #f7f7f7; 
-  border-radius: 15px;
-  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.05);
-  display: flex;
-  flex-direction: column;
+.sanctuary-section {
+    margin: 80px 80px; 
+    padding: 60px 30px; 
+    background: linear-gradient(135deg, #c0c0eb 0%, #293241 100%); /* ⭐ 深色漸變背景 */
+    border-radius: 20px; /* 圓角更大 */
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4); /* ⭐ 更深的陰影 */
+    display: flex;
+    flex-direction: column;
+    align-items: center; /* 內容置中 */
+    text-align: center;
+    position: relative;
+    overflow: hidden;
 }
 
 .message-board-header {
-  margin-bottom: 30px;
-  text-align: center;
-}
-
-.message-board-header .title-section h1 {
-  font-size: 2.8rem;
-  margin-bottom: 10px;
-}
-
-.message-board-header .subtitle {
-  font-size: 1.05rem;
-  color: #555;
-  margin-bottom: 0;
-  max-width: 800px;
-  margin: 0 auto;
-}
-
-/* 留言卡片列表 */
-.posts-list {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); /* RWD 網格佈局 */
-  gap: 25px;
-  padding-top: 20px; /* 列表與標題之間增加一點間距 */
-}
-
-.post-card {
-  background-color: white;
-  padding: 20px;
-  border-radius: 10px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-  border-left: 5px solid #a3ccff; /* 裝飾邊條 */
-  transition: transform 0.2s;
-}
-
-.post-card:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.15);
-}
-
-.post-meta {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 10px;
-  padding-bottom: 5px;
-  border-bottom: 1px dashed #eee;
-  font-size: 0.9rem;
-}
-
-.post-user {
-  font-weight: bold;
-  color: #335d94;
-}
-
-.post-date {
-  color: #999;
-}
-
-.post-content {
-  margin: 0;
-  line-height: 1.6;
-  color: #333;
-  white-space: pre-wrap; /* 保留換行 */
-}
-
-.no-posts {
+    margin-bottom: 30px;
     text-align: center;
-    grid-column: 1 / -1; /* 跨越所有列 */
-    padding: 30px;
-    color: #888;
+    z-index: 2; /* 確保文字在最上層 */
+}
+
+.message-board-header .title-section {
+    /* 確保標題區塊正確顯示 */
+    display: inline-block;
+}
+
+.sanctuary-h1 { /* ⭐ 新標題樣式 */
+    font-size: 3.5rem;
+    font-weight: 900;
+    color: #e0f7fa; /* 淺藍色文字 */
+    line-height: 1.2;
+    margin-bottom: 15px;
+    letter-spacing: 0.1em;
+    text-shadow: 0 0 10px rgba(163, 204, 255, 0.7); /* 柔和發光效果 */
+}
+
+.sanctuary-subtitle{
+    font-size: 1.2rem;
+    color: #dce4ef; /* 柔和藍灰色 */
+    margin-bottom: 40px;
+    line-height: 1.8;
+    max-width: 900px;
+}
+
+.sanctuary-btn {
+    background-color: #ffcc80; /* 溫暖的橙色調 */
+    color: #1a1a2e;
+    font-size: 1.2rem;
+    font-weight: bold;
+    padding: 15px 40px;
+    border: none;
+    border-radius: 50px;
+    cursor: pointer;
+    box-shadow: 0 5px 15px rgba(255, 204, 128, 0.5);
+    transition: background-color 0.3s, transform 0.2s;
+    text-decoration: none;
+    display: inline-block;
+}
+
+.sanctuary-btn:hover {
+    background-color: #ffb74d;
+    transform: translateY(-2px);
 }
 
 /* -------------------- Footer -------------------- */
@@ -583,6 +551,13 @@ display: flex;
     height: 300px;
   }
 
+  .sanctuary-section {
+    margin: 60px 40px; padding: 60px 40px  
+  }
+  .sanctuary-h1  {
+    font-size: 3rem 
+  }
+
   /* 調整 Footer 置中寬度 */
   .footer-content {
     max-width: 960px;
@@ -712,7 +687,18 @@ display: flex;
     margin-right: 0; 
   }
 
-  /* 5. Footer 調整 (垂直排列) */
+  .sanctuary-section { /* ⭐ RWD 樣式 */
+      margin: 30px 20px; 
+      padding: 40px 20px;
+  }
+  .sanctuary-h1 {
+      font-size: 2.5rem;
+  }
+  .sanctuary-subtitle {
+      font-size: 1rem;
+  }
+
+  /* Footer 調整 (垂直排列) */
   .footer-content {
     flex-direction: column;
     padding: 0 20px 30px;

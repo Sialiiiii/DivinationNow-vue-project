@@ -94,6 +94,10 @@ const goFortuneStickTwo = () => {
   isMenuOpen.value = false; 
   router.push('/FortuneStickTwoDivination'); 
 };
+const goSanctuary = () => {
+    isMenuOpen.value = false;
+    router.push('/sanctuary');
+}
 
 // 資料獲取：現已包含會員資料和狀態選項
 const loadMemberData = async () => { // ⭐ 重新命名為 loadMemberData 避免與 import 衝突
@@ -200,6 +204,7 @@ onMounted(() => {
         <li><button @click="goRunesTwo">盧恩符文 (雙顆)</button></li>
         <li><button @click="goFortuneStickOne">六十甲子籤</button></li>
         <li><button @click="goFortuneStickTwo">雷雨師百籤</button></li>
+        <li><button @click="goSanctuary">心靈樹洞</button></li>
       </ul>
     </nav>
     <div v-if="isMenuOpen" @click="toggleMenu" class="shared-menu-overlay"></div>
