@@ -33,6 +33,9 @@ function goFortuneStickTwo() {
 function goSanctuary() {
   router.push('/sanctuary')
 }
+function goadmin() {
+  router.push('/admin/login')
+}
 
 
 </script>
@@ -143,7 +146,8 @@ function goSanctuary() {
               <li><a href="#">關於我們</a></li>
               <li><a href="#">聯絡我們</a></li>
               <li><a href="#">參考資料來源</a></li> 
-              <li><a href="#">隱私權政策</a></li> 
+              <li><a href="#">隱私權政策</a></li>
+              <li><a @click="goadmin">...</a></li> 
             </ul>
           </div>
 
