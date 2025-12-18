@@ -8,6 +8,7 @@ import MemberProfileView from '../views/MemberProfileView.vue'
 import MoodSanctuaryView from '../views/MoodSanctuaryView.vue'
 import AdminLoginView from '../views/AdminLoginView.vue' 
 import AdminDashboardView from '../views/AdminDashboardView.vue'
+import AdminUserManageView from '../views/AdminUserManageView.vue'
 
 const router = createRouter({
     history: createWebHistory(import.meta.env.BASE_URL),
@@ -96,7 +97,13 @@ const router = createRouter({
             name: 'admin-dashboard',
             component: AdminDashboardView,
             meta: { requiresAdmin: true } // 💡 標記此頁面需要管理權限
-        }
+        },
+        {
+            path: '/admin/usermanage',
+            name: 'admin-usermanage',
+            component: AdminUserManageView,
+            meta: { requiresAdmin: true } // 💡 標記此頁面需要管理權限
+        },
     ]
 })
 

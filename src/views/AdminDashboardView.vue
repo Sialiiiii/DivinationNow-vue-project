@@ -1,10 +1,10 @@
 <script setup>
 import { ref, onMounted } from 'vue';
-// 💡 重要：使用你封裝好的 axiosInstance，確保帶上 Session Cookie
 import axiosInstance from '@/services/axiosInstance'; 
-import { useRouter } from 'vue-router';
+import { useRouter, useRoute } from 'vue-router';
 
 const router = useRouter();
+const route = useRoute(); 
 const posts = ref([]);
 const isLoading = ref(true);
 const errorMessage = ref('');
@@ -13,14 +13,10 @@ onMounted(() => {
   fetchAdminPosts();
 });
 
-/**
- * 獲取所有貼文供管理員審查
- */
 const fetchAdminPosts = async () => {
   isLoading.value = true;
   errorMessage.value = '';
   try {
-    // 💡 使用 axiosInstance 自動處理 /api 前綴
     const response = await axiosInstance.get('/admin/posts');
     posts.value = response.data;
   } catch (error) {
@@ -36,12 +32,8 @@ const fetchAdminPosts = async () => {
   }
 };
 
-/**
- * 處理刪除貼文
- */
 const handleDeletePost = async (postId) => {
     if (!confirm(`確定要刪除 Post ID: ${postId} 嗎？此操作不可逆！`)) return;
-
     try {
         await axiosInstance.delete(`/admin/posts/${postId}`);
         alert('貼文刪除成功！');
@@ -51,12 +43,8 @@ const handleDeletePost = async (postId) => {
     }
 };
 
-/**
- * 處理用戶黑名單/解除黑名單
- */
 const handleToggleBlacklist = async (post) => {
     const userId = post.userId;
-    // 💡 修正：對齊後端 DTO 欄位名稱 'blacklisted'
     const isCurrentlyBlacklisted = post.blacklisted; 
     
     if (isCurrentlyBlacklisted) {
@@ -64,7 +52,6 @@ const handleToggleBlacklist = async (post) => {
         try {
             await axiosInstance.delete(`/admin/blacklist/${userId}`);
             alert('用戶已解除黑名單！');
-            // 💡 更新本地狀態
             posts.value.forEach(p => {
                 if (p.userId === userId) p.blacklisted = false;
             });
@@ -74,7 +61,6 @@ const handleToggleBlacklist = async (post) => {
     } else {
         const reason = prompt(`確定要將用戶 ID: ${userId} 加入黑名單嗎？請輸入原因：`);
         if (!reason) return;
-
         try {
             await axiosInstance.post('/admin/blacklist', { userId, reason });
             alert('用戶已加入黑名單！');
@@ -97,7 +83,23 @@ const formatTime = (isoTime) => {
 <template>
   <div class="admin-dashboard-container">
     <header class="dashboard-header">
-      <h1>管理儀表板</h1>
+      <div class="header-left">
+        <h1>管理儀表板</h1>
+        <nav class="admin-tabs">
+          <button 
+            @click="router.push('/admin/dashboard')" 
+            :class="['tab-btn', { active: route.path === '/admin/dashboard' }]"
+          >
+            📝 貼文管理
+          </button>
+          <button 
+            @click="router.push('/admin/usermanage')" 
+            :class="['tab-btn', { active: route.path === '/admin/usermanage' }]"
+          >
+            👥 會員管理
+          </button>
+        </nav>
+      </div>
       <button @click="router.push('/admin/login')" class="logout-btn">登出系統</button>
     </header>
 
@@ -150,7 +152,7 @@ const formatTime = (isoTime) => {
 /* 基礎設定 */
 .admin-dashboard-container {
   padding: 20px;
-  background-color: #f4f7f6; /* 淺灰背景 */
+  background-color: #f4f7f6;
   min-height: 100vh;
   font-family: 'Microsoft JhengHei', sans-serif;
 }
@@ -158,18 +160,52 @@ const formatTime = (isoTime) => {
 .dashboard-header {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-end; /* 對齊底端讓標籤貼合分隔線 */
   margin-bottom: 30px;
-  padding-bottom: 10px;
-  border-bottom: 3px solid #36454F; /* 深色分隔線 */
+  border-bottom: 3px solid #36454F;
+  padding-bottom: 0; /* 讓 Tabs 貼在線上面 */
+}
+
+.header-left {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
 }
 
 .dashboard-header h1 {
   font-size: 2.5rem;
   color: #36454F;
+  margin: 0;
 }
 
-/* 登出按鈕 */
+/* 💡 導航標籤樣式 */
+.admin-tabs {
+  display: flex;
+  gap: 5px;
+}
+
+.tab-btn {
+  padding: 10px 25px;
+  border: none;
+  background-color: #e0e0e0;
+  color: #666;
+  cursor: pointer;
+  border-radius: 8px 8px 0 0; /* 上圓角 */
+  font-size: 1rem;
+  font-weight: bold;
+  transition: all 0.3s;
+}
+
+.tab-btn:hover {
+  background-color: #d0d0d0;
+}
+
+.tab-btn.active {
+  background-color: #36454F;
+  color: white;
+}
+
+/* 登出按鈕 - 稍微往上調一點點免得被擋住 */
 .logout-btn {
   background-color: #f44336;
   color: white;
@@ -177,6 +213,7 @@ const formatTime = (isoTime) => {
   padding: 10px 20px;
   border-radius: 5px;
   cursor: pointer;
+  margin-bottom: 15px;
   transition: background-color 0.3s;
 }
 
@@ -184,7 +221,7 @@ const formatTime = (isoTime) => {
   background-color: #d32f2f;
 }
 
-/* 載入/錯誤狀態 */
+/* ... 以下維持原本的 CSS 不變 ... */
 .loading-state, .error-panel {
   text-align: center;
   padding: 50px;
@@ -194,101 +231,80 @@ const formatTime = (isoTime) => {
   border-radius: 8px;
   margin-top: 30px;
 }
-
-.error-panel {
-    color: #f44336;
-    border: 1px solid #f44336;
+.error-panel { 
+  color: #f44336; 
+  border: 1px solid #f44336; 
 }
-
-/* 表格樣式 */
-.posts-table-wrapper {
-  overflow-x: auto; /* 確保在小螢幕上可以滾動 */
-  background-color: white;
-  border-radius: 8px;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+.posts-table-wrapper { 
+  overflow-x: auto; 
+  background-color: white; 
+  border-radius: 8px; 
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1); 
 }
-
-.posts-table {
-  width: 100%;
-  border-collapse: collapse;
+.posts-table { 
+  width: 100%; 
+  border-collapse: 
+  collapse; 
 }
-
-.posts-table th, .posts-table td {
-  padding: 12px 15px;
-  text-align: left;
-  border-bottom: 1px solid #ddd;
-  font-size: 0.95rem;
+.posts-table th, .posts-table td { 
+  padding: 12px 15px; 
+  text-align: left; 
+  border-bottom: 1px solid #ddd; 
+  font-size: 0.95rem; 
 }
-
-.posts-table th {
-  background-color: #36454F;
-  color: white;
-  font-weight: 600;
-  white-space: nowrap;
+.posts-table th { 
+  background-color: #36454F; 
+  color: white; 
+  font-weight: 600; 
+  white-space: nowrap; 
 }
-
-.posts-table tr:hover:not(.blacklisted-row) {
-  background-color: #f0f8ff; /* 輕微高亮 */
+.posts-table tr:hover:not(.blacklisted-row) { 
+  background-color: #f0f8ff; 
 }
-
-/* 貼文內容單元格 */
-.content-cell {
-    max-width: 400px; /* 限制寬度 */
-    white-space: normal; /* 允許換行 */
-    word-wrap: break-word;
+.content-cell { 
+  max-width: 400px; 
+  white-space: normal; 
+  word-wrap: break-word; 
 }
-
-/* 狀態顏色 */
-.status-blacklisted {
-    font-weight: bold;
-    color: #f44336; /* 紅色 */
+.status-blacklisted { 
+  font-weight: bold; 
+  color: #f44336; 
 }
-
-.status-clean {
-    color: #4CAF50; /* 綠色 */
+.status-clean { 
+  color: #4CAF50; 
 }
-
-/* 黑名單行樣式 */
-.blacklisted-row {
-    background-color: #ffebee; /* 淺紅色背景 */
-    color: #9e9e9e;
+.blacklisted-row { 
+  background-color: #ffebee; 
+  color: #9e9e9e; 
 }
-
-.blacklisted-row td {
-    border-color: #f8c8c8;
+.blacklisted-row td { 
+  border-color: #f8c8c8; 
 }
-
-/* 操作按鈕 */
-.action-cell {
-  white-space: nowrap;
+.action-cell { 
+  white-space: nowrap; 
 }
-
-.action-btn {
-  padding: 8px 12px;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-  font-size: 0.85rem;
-  margin-right: 5px;
-  transition: opacity 0.3s;
+.action-btn { 
+  padding: 8px 12px; 
+  border: none; 
+  border-radius: 5px; 
+  cursor: pointer; 
+  font-size: 0.85rem; 
+  margin-right: 5px; 
+  transition: opacity 0.3s; 
 }
-
-.action-btn:hover {
-    opacity: 0.8;
+.action-btn:hover { 
+  opacity: 0.8; 
 }
-
-.delete-btn {
-  background-color: #f44336; /* 紅色 */
-  color: white;
+.delete-btn { 
+  background-color: #f44336; 
+  color: white; 
 }
-
-.blacklist-btn {
-  background-color: #ff9800; /* 橙色 */
-  color: white;
+.blacklist-btn { 
+  background-color: #ff9800; 
+  color: white; 
 }
-
-.unblacklist-btn {
-  background-color: #4CAF50; /* 綠色 */
-  color: white;
-}
+.unblacklist-btn { 
+  background-color: #4CAF50; 
+  color: white; 
+  }
 </style>
