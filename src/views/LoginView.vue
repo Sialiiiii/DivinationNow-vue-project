@@ -15,63 +15,17 @@ const handleLogin = async () => {
   loginError.value = '';
   loginSuccess.value = '';
 
-//   try {
-//     // 🚀 修正點：直接將 email 和 password 作為單獨參數傳遞給 apiLogin
-//     const userData = await apiLogin(email.value.trim(), password.value); 
-
-//     // 關鍵修正 2: 檢查返回數據中是否包含 User ID
-//     if (userData && userData.id) {
-//       console.log('登入成功，User ID:', userData.id);
-//       loginSuccess.value = userData.message || '登入成功！';
-
-//       // 關鍵修正 3: 呼叫 store 的 login action，傳遞 User 數據
-//       authStore.login(userData); 
-//       // Pinia store 內有邏輯導向 /member-profile
-//     
-//     } else {
-//         // 登入 API 雖然返回 200，但數據結構不對
-//         loginError.value = '登入失敗，伺服器響應的會員數據無效。';
-//       }
-//   } catch (error) {
-//     console.error('登入錯誤', error);
-//     
-//     if (error.response) {
-//       // 錯誤處理：優先顯示後端傳遞的錯誤訊息
-//       let errorMessage = error.response.data.message || `伺服器錯誤 (${error.response.status})`;
-//       
-//       // 處理 Spring Security 默認的 401 響應（通常沒有 body）
-//       if (error.response.status === 401 && !error.response.data) {
-//         errorMessage = '帳號或密碼錯誤，請重新嘗試。';
-//       }
-//       // 處理 403 錯誤
-//       if (error.response.status === 403) {
-//         errorMessage = '權限不足或登入資訊無效，請檢查帳號密碼。';
-//       }
-//       
-//       loginError.value = errorMessage;
-//     } else {
-//       loginError.value = '網路錯誤，請檢查後端服務是否運行。';
-//     }
-//   }
-// };
 
 try {
     const userData = await apiLogin(email.value.trim(), password.value); 
-
-    // 登入 API 成功，通常 Spring Security 不會返回 userData，
-    // 但如果您的自定義 successHandler 有返回，則使用它
     if (userData) {
       console.log('登入成功，User Data:', userData);
       loginSuccess.value = '登入成功！正在跳轉...';
 
-      // 🚀 關鍵修正：獲取 redirect 參數 (用於返回被保護頁面)
       const redirectPath = router.currentRoute.value.query.redirect || '/'; 
-
-      // 呼叫 store 的 login action，傳遞 User 數據和目標路徑
       authStore.login(userData, redirectPath); 
     
     } else {
-      // 如果 Spring Security 只返回 200/204 但沒有 body，我們假設成功
       loginSuccess.value = '登入成功！正在跳轉...';
       const redirectPath = router.currentRoute.value.query.redirect || '/'; 
       authStore.login({ id: 'unknown' }, redirectPath); // 使用假數據觸發登入狀態
@@ -79,7 +33,6 @@ try {
 
   } catch (error) {
     console.error('登入錯誤', error);
-    // ... (錯誤處理邏輯與您提供的原始碼相同)
     if (error.response) {
       let errorMessage = error.response.data.message || `伺服器錯誤 (${error.response.status})`;
       
@@ -135,7 +88,6 @@ try {
       --color-input-bg: rgba(0, 0, 0, 0.1);
   }
 
-  /* 容器佈局 */
   .auth-container {
       display: flex;
       justify-content: center; 
@@ -145,7 +97,6 @@ try {
       background: linear-gradient(135deg, #e0f2f7 0%, #a4c2d6 50%, #7d96a8 100%);
   }
 
-  /* 表單卡片*/
   .auth-form {
       width: 100%;
       max-width: 420px; 
@@ -206,7 +157,7 @@ try {
       box-shadow: 0 0 10px var(--color-shadow-soft); 
   }
 
-  /* 單選群組排版 */
+  /* 單選排版 */
   .radio-section .radio-label-main {
       color: var(--color-dark-text);
   }
@@ -216,7 +167,7 @@ try {
   }
 
 
-  /* 註冊按鈕樣式設計 */
+  /* 註冊按鈕樣式 */
   button[type="submit"] {
       width: 100%;
       margin-top: 25px;

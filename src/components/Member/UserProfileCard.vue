@@ -6,7 +6,6 @@ const props = defineProps({
     type: Object,
     required: true
   },
-  // ⭐ 新增：接收父組件傳入的狀態選項
   careerStatuses: {
     type: Array,
     default: () => []
@@ -18,30 +17,22 @@ const props = defineProps({
 });
 
 const emit = defineEmits(['update-profile']);
-
-// 編輯模式開關
 const isEditing = ref(false);
-
-// 用於儲存編輯中的數據，避免直接修改 props
 const editableUser = ref({});
 
-// 監聽 props.user 變化，同步到 editableUser
+
 watch(() => props.user, (newUser) => {
-  // 當 props 改變時（例如 API 更新成功），同步數據
   if (!isEditing.value) {
     editableUser.value = { ...newUser };
   }
 }, { immediate: true, deep: true });
 
 
-// 進入編輯模式
 const startEdit = () => {
-  // 將當前 user 數據淺複製到編輯狀態
   editableUser.value = { ...props.user };
   isEditing.value = true;
 };
 
-// 儲存並發送更新事件給父組件
 const saveProfile = () => {
   const payload = {
     username: editableUser.value.username,
@@ -50,17 +41,14 @@ const saveProfile = () => {
     relationshipStatusId: editableUser.value.relationshipStatusId
   };
   
-  // 發送事件給父組件，讓父組件處理 PATCH API 請求
   emit('update-profile', payload);
-  
-  // 保持在編輯模式，直到父組件收到 API 成功回應並更新 props.user
+
   isEditing.value = false;
 };
 
-// 取消編輯，並恢復數據
+
 const cancelEdit = () => {
   isEditing.value = false;
-  // 恢復到 props.user 的原始數據
   editableUser.value = { ...props.user }; 
 };
 </script>
@@ -124,7 +112,6 @@ const cancelEdit = () => {
 
 
 <style scoped>
-/* 保持現有樣式... */
 .user-card {
   padding: 20px;
   border: 1px solid #ccc;
@@ -137,7 +124,7 @@ const cancelEdit = () => {
   margin-top: 0;
   color: #333;
 }
-/* 新增樣式 */
+
 .card-header {
   display: flex;
   justify-content: space-between;
@@ -160,30 +147,37 @@ const cancelEdit = () => {
   cursor: pointer;
   font-weight: bold;
 }
+
 .edit-btn {
   background-color: #747474;
   color: white;
 }
+
 .save-btn {
   background-color: #28a745;
   color: white;
 }
+
 .cancel-btn {
   background-color: #6c757d;
   color: white;
 }
+
 .field-group {
   margin-bottom: 10px;
 }
+
 .field-group label {
   display: inline-block;
   width: 100px;
   font-weight: bold;
 }
+
 .field-group input, .field-group select {
   padding: 5px;
   border: 1px solid #ddd;
   border-radius: 4px;
   width: 200px;
 }
+
 </style>

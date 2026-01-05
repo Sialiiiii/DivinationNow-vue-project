@@ -55,11 +55,7 @@
     return;
   }
   
-     // 🚀 修正點：將聲明和賦值移動到這裡 (確保在使用前被定義)
-     const mappedRelationshipStatus = mapRelationshipStatusToBackend(relationshipStatus.value); 
-
-
-  // 檢查所有必填欄位
+  const mappedRelationshipStatus = mapRelationshipStatusToBackend(relationshipStatus.value); 
   const requiredFields = [
     email.value, password.value, username.value, gender.value, dateOfBirth.value,
     careerStatus.value, relationshipStatus.value
@@ -76,7 +72,7 @@
       password: password.value,
       username: username.value,
       
-      dateOfBirth: dateOfBirth.value, // YYYY-MM-DD 格式
+      dateOfBirth: dateOfBirth.value,
       gender: mapGenderToBackend(gender.value),
       
       careerStatusValue: mapCareerStatusToBackend(careerStatus.value),
@@ -236,7 +232,7 @@
       --color-input-bg: rgba(0, 0, 0, 0.1);
   }
 
-  /* 容器佈局 */
+
   .auth-container {
       display: flex;
       justify-content: center; 
@@ -246,7 +242,7 @@
       background: linear-gradient(135deg, #e0f2f7 0%, #a4c2d6 50%, #7d96a8 100%);
   }
 
-  /* 表單卡片*/
+
   .auth-form {
       width: 100%;
       max-width: 420px; 
@@ -254,7 +250,6 @@
       background: var(--color-form-bg); 
       backdrop-filter: blur(10px); 
       -webkit-backdrop-filter: blur(10px);
-      
       border: 1px solid rgba(255, 255, 255, 0.3); 
       border-radius: 12px;
       box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1); 
@@ -263,7 +258,6 @@
       text-align: center;
   }
 
-  /* 標題 */
   .auth-form h2 {
       color: var(--color-dark-text);
       margin-top: 15px; 
@@ -272,7 +266,6 @@
       text-shadow: 0 0 5px var(--color-shadow-soft);
   }
 
-  /* 輸入欄位樣式 */
   .form-group {
       margin-bottom: 12px; 
       display: flex;
@@ -307,7 +300,6 @@
       box-shadow: 0 0 10px var(--color-shadow-soft); 
   }
 
-  /* 單選群組排版 */
   .radio-section .radio-label-main {
       color: var(--color-dark-text);
   }
@@ -316,8 +308,6 @@
       color: var(--color-dark-text);
   }
 
-
-  /* 註冊按鈕樣式設計 */
   button[type="submit"] {
       width: 100%;
       margin-top: 25px;
@@ -342,7 +332,6 @@
       transform: translateY(-1px); 
   }
 
-  /* 回到首頁按鈕 */
   .auth-form .home-link-button {
       display: block;
       width: fit-content; 
@@ -364,7 +353,6 @@
       box-shadow: none; 
   }
 
-  /* 登入連結文字 */
   .auth-form p {
       margin-top: 25px; 
       font-size: 0.9em;
@@ -383,7 +371,6 @@
       text-decoration: underline;
   }
 
-  /* Modal Styles */
   .modal-overlay {
       position: fixed;
       top: 0;

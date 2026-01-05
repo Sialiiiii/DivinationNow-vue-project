@@ -3,10 +3,8 @@ import { ref, onMounted, computed, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '../stores/auth'; 
 import { useDivinationStore } from '../stores/divination'; 
-
-// *** 引入 API 服務 ***
-import { fetchRuneData } from '@/services/runes'; // 引入基礎符文資料 (rune_orientation)
-import { fetchSpecificRuneReading, saveRuneDoubleLog } from '@/services/runesTwo'; // 引入雙顆專屬 API
+import { fetchRuneData } from '@/services/runes';
+import { fetchSpecificRuneReading, saveRuneDoubleLog } from '@/services/runesTwo';
 
 const router = useRouter();
 const authStore = useAuthStore();
@@ -24,18 +22,12 @@ const showInstruction = ref(true);
 const isMenuOpen = ref(false); 
 const drawnCards = ref([]); 
 const showResultModal = ref(false); 
-
-const isReadingLoading = ref(false); // 占卜結果是否正在從後端獲取中
-const isHovering = ref(false); // 控制卡片 hover 效果
-
-// *** 資料狀態管理 ***
+const isReadingLoading = ref(false);
+const isHovering = ref(false);
 const isDataLoading = ref(true); 
 const allRuneData = ref([]); 
-
 const fullCardDeck = ref([]); 
 const shuffledCards = ref([]);
-
-
 const hasDrawnTwoCards = computed(() => drawnCards.value.length === 2);
 
 // --- 漢堡選單 ---
@@ -104,8 +96,7 @@ async function fetchAllRuneData() {
 }
 
 /**
-* [NEW] 紀錄雙顆符文占卜結果
-* ⭐ 修正簽名：移除 userId，只依賴卡片 ID 和狀態 ID
+* 紀錄雙顆符文占卜結果
 */
 async function saveDoubleDivinationRecord(rune1Id, rune2Id, statusId) { 
   if (!authStore.isAuthenticated) {
@@ -113,13 +104,10 @@ async function saveDoubleDivinationRecord(rune1Id, rune2Id, statusId) {
     return;
   }
   try {
-      // ⭐ 修正：檢查必要的卡片和狀態 ID
       if (rune1Id && rune2Id && statusId) {
-        // ⭐ 呼叫 Service：只傳遞卡片 ID 和狀態 ID
         const result = await saveRuneDoubleLog(rune1Id, rune2Id, statusId); 
         console.log('[紀錄成功] 盧恩符文雙指引紀錄完成。Log ID:', result.logId); 
       } else {
-          // 錯誤發生在這裡，可能因為 rune1Id, rune2Id 或 statusId 為 null
           console.warn('[記錄失敗] 缺少必要的 ID 參數。'); 
       }
     } catch (error) {
@@ -128,30 +116,19 @@ async function saveDoubleDivinationRecord(rune1Id, rune2Id, statusId) {
 }
 
 /**
-* 【API 串接點】實際發 API 查詢符文解釋
-* @param {number} orientationId - 符文正逆位 ID (card.original_orientation_id)
-* @param {number} statusId - 狀態 ID (INT)
-* @param {number} position - 牌位: 1=現況/基礎, 0=建議/指引
+* API 串接點
+* @param {number} orientationId
+* @param {number} statusId
+* @param {number} position
 */
 async function fetchRuneReading(orientationId, statusId, position) {
   try {
     const response = await fetchSpecificRuneReading(orientationId, statusId, position);
-    
-    // 組合牌位名稱和狀態中文標籤
     const positionName = position === 1 ? '現況/基礎' : '建議/指引';
-    
-    // 這裡 runeData 必須包含 full_name_zh, full_name_en 等屬性
     const runeData = allRuneData.value.find(r => r.original_orientation_id === orientationId);
-    
-        // 🚀 輸出 runeData 內容，檢查 full_name_zh 是否存在
-        console.log(`DEBUG: Rune Data for ID ${orientationId}:`, runeData);
-
     const orientation = runeData?.isReversed ? '逆位 (R)' : '正位 (U)';
     const runeName = runeData?.full_name_zh || '未知符文'; 
-    
-    // 檢查是否有特定解讀 (response.interpretation_text)
     const interpretation = response.interpretation_text || runeData?.general_meaning || '目前無特定解讀，請參考通用解釋。';
-    
     const finalReadingText = `
 ${runeName} / ${runeData?.full_name_en || 'Unknown'}
 ---------
@@ -170,7 +147,6 @@ ${interpretation}
 // --- 流程控制函數 ---
 
 function startDivination() {
- // 如果資料未載入完成，則不開始
  if (isDataLoading.value || allRuneData.value.length === 0) {
    console.warn("Rune data not loaded yet. Cannot start divination.");
    return;
@@ -179,7 +155,7 @@ function startDivination() {
 }
 
 /**
-* 處理使用者選擇主題後的邏輯
+* 使用者選擇主題後的邏輯
 */
 function handleSelectTopic(topic) {
  divStore.setTopic(topic);
@@ -189,7 +165,6 @@ function handleSelectTopic(topic) {
   if (statusId) {
    divStore.setStatus(statusId);
   } else {
-   // 如果會員資料裡沒有 Status ID (null)，則彈出 Modal 讓使用者手動選擇
    divStore.showStatusModal = true; 
   }
  } else {
@@ -204,7 +179,6 @@ function handleSelectStatus(statusId) {
  divStore.setStatus(statusId); 
 }
 
-// 監聽 Pinia 狀態，當流程準備好時進入抽卡畫面
 const watchReadyToDraw = computed(() => divStore.isReadyToDraw);
 
 watch(watchReadyToDraw, (isReady) => {
@@ -232,7 +206,6 @@ async function handleCardClick(clickedCard) {
  if (drawnCards.value.length === 2) {
   isReadingLoading.value = true;
 
-  // 使用 Promise.resolve/reject 來處理 setTimeout 的異步邏輯，確保等待完成
   await new Promise(resolve => setTimeout(resolve, 1500)); 
 
   try {
@@ -247,11 +220,9 @@ async function handleCardClick(clickedCard) {
    const rune1OrientationId = drawnCards.value[0].original_orientation_id; 
    const rune2OrientationId = drawnCards.value[1].original_orientation_id; 
 
-   // 異步獲取兩張牌的解釋 (呼叫 API 服務)
+   // 異步獲取兩張牌的解釋(呼叫 API)
    const results = await Promise.all([
-    // 第一張牌：現況/基礎 (position = 1)
     fetchRuneReading(rune1OrientationId, statusId, 1),
-    // 第二張牌：建議/指引 (position = 2)
     fetchRuneReading(rune2OrientationId, statusId, 2)
    ]);
 
@@ -260,7 +231,7 @@ async function handleCardClick(clickedCard) {
    drawnCards.value[1].readingText = results[1];
 
    
-   // *** 紀錄 API 呼叫 (在結果出來後執行) ***
+   // 紀錄 API 呼叫 (在結果出來後再執行)
    await saveDoubleDivinationRecord(rune1OrientationId, rune2OrientationId, statusId);
 
    isReadingLoading.value = false;
@@ -277,11 +248,10 @@ async function handleCardClick(clickedCard) {
 * 執行洗牌和重置動作 
 */
 function shuffleAndReset() {
- // *** 確保資料已載入 ***
  if (fullCardDeck.value.length === 0) {
    return; 
  }
- const selected24Cards = selectRandomCards(fullCardDeck.value, 24); // *** 使用 fullCardDeck.value ***
+ const selected24Cards = selectRandomCards(fullCardDeck.value, 24);
  
  const resetData = selected24Cards.map(card => ({
   ...card,
@@ -470,7 +440,6 @@ onMounted(async () => {
         <h3>請選擇您的【{{ divStore.currentTopic }}】狀態</h3>
         
         <div class="topic-selection-buttons">
-          <!-- 遍歷 Pinia 中的狀態選項，傳遞 ID -->
           <button v-for="option in divStore.getStatusOptions" :key="option.id" 
                   class="runestwo-start-btn topic-btn status-btn" 
                   @click="handleSelectStatus(option.id)"> 
@@ -650,9 +619,7 @@ html, body {
     align-items: center;
   }
 
-/* --- 新增/修正: Modal 樣式 --- */
 .topic-modal-overlay {
-    /* 繼承 runestwo-result-modal-overlay */
 }
 
 .topic-modal {
@@ -710,7 +677,6 @@ html, body {
 
 /* --- 狀態選擇 Modal 樣式 --- */
 .status-btn {
-    /* 狀態按鈕使用綠色系，與主題按鈕區分 */
     background: linear-gradient(to right, #343a4b, #c0c0c9); 
 }
 .status-btn:hover {
@@ -817,7 +783,7 @@ html, body {
     cursor: pointer;
 }
 
-/* 牌堆扇形展開效果 (透過 container 的 mouseenter/mouseleave 觸發) */
+/* 牌堆扇形展開效果 */
 .runestwo-container:hover .runestwo-card-wrapper {
     transform: rotate(calc(var(--i) * 1deg))
       translate(calc(var(--i) * 30px), -50px);
@@ -847,7 +813,7 @@ html, body {
     transform: translate(450px, -220px) scale(0.7) !important;
 }
 
-/* 翻面狀態 (因為一抽就翻，所以這個樣式會立即應用在 drawn 卡片上) */
+/* 翻面狀態*/
 .runestwo-card-wrapper.flipped .runestwo-card-inner {
     transform: rotateY(180deg);
 }
@@ -875,7 +841,6 @@ html, body {
     padding: 0;
 }
 
-/* 確保卡片內的圖片也能正確顯示 */
 .runestwo-card-face img {
     width: 100%;
     height: 100%;
@@ -883,12 +848,10 @@ html, body {
     border-radius: 8px;
 }
 
-/* 背面樣式 */
 .runestwo-card-back {
     box-shadow: 0 8px 5px rgba(150, 150, 150, 0.1);
 }
 
-/* 正面樣式 */
 .runestwo-card-front {
     background-color: rgb(116, 116, 116); 
     transform: rotateY(180deg); 

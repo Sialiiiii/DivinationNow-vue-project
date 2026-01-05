@@ -23,9 +23,8 @@ const isHovering = ref(false);
 
 
 // --- 資料狀態管理 ---
-const isDataLoading = ref(true); // 追蹤初始 API 抓取狀態
-const allRuneData = ref([]); // 存放從 API 抓取的完整符文資料
-
+const isDataLoading = ref(true);
+const allRuneData = ref([]); // 存放完整符文資料
 const initialCardDeck = ref([]); 
 const shuffledCards = ref([]);
 
@@ -69,12 +68,10 @@ async function fetchAllRuneData() {
     isDataLoading.value = true;
     try {
         const apiData = await fetchRuneData(); 
-
-        // 將 API 資料欄位轉換為前端慣用的結構
         const formattedData = apiData.map(item => ({
             original_orientation_id: item.orientation_id, 
             rune_id: item.rune_id,
-            isReversed: item.is_reversed === 1, // 將 tinyint(1) 轉為 boolean
+            isReversed: item.is_reversed === 1,
             full_name_zh: item.full_name_zh,
             full_name_en: item.full_name_en, 
             general_meaning: item.rune_general_meaning,
@@ -112,15 +109,14 @@ function select24RandomCards(fullDeck) {
 
 
 /**
- * 進入抽卡畫面
+ * 抽卡畫面
  */
 function startDivination() {
     if (isDataLoading.value || allRuneData.value.length === 0) {
         console.warn("Rune data not loaded yet. Cannot start divination.");
         return;
     }
-    showInstruction.value = false;
-    // 每次開始前重新選取24張並洗牌
+    showInstruction.value = false; // 每次開始前重新選取24張並洗牌
     initialCardDeck.value = select24RandomCards(allRuneData.value); // 使用 API 資料
     shuffleAndReset();
 }
@@ -162,8 +158,7 @@ async function handleCardClick(clickedCard) {
     }
 
     if (clickedCard.isDrawn === false) {
-        // 1. 第一次點擊：抽取符文 (移動卡片)
-        
+        // 第一次點擊：抽取符文 (移動卡片)
         // 只有在沒有任何牌被翻開時，才能執行換牌邏輯
         const isAnyCardFlipped = shuffledCards.value.some(card => card.isFlipped);
         if (isAnyCardFlipped) {
@@ -173,10 +168,10 @@ async function handleCardClick(clickedCard) {
         // 換牌邏輯：清除舊的抽取狀態，並設定新牌
         shuffledCards.value.forEach(card => card.isDrawn = false);
         clickedCard.isDrawn = true;
-        drawnCardId.value = clickedCard.id; // 鎖定牌堆（用於視覺樣式）
+        drawnCardId.value = clickedCard.id; // 鎖定牌堆(視覺樣式）
 
     } else if (clickedCard.isDrawn === true && clickedCard.isFlipped === false) {
-        // 2. 第二次點擊：翻面並顯示結果 (資料處理和紀錄)
+        // 第二次點擊：翻面並顯示結果 (資料處理和紀錄)
         
         isReadingLoading.value = true;
         
@@ -186,10 +181,9 @@ async function handleCardClick(clickedCard) {
         // 模擬獲取 rune_general_meaning
         await new Promise(resolve => setTimeout(resolve, 500)); 
         
-        // 構造最終的顯示文本
+        // 顯示文本
         const orientation_status = clickedCard.isReversed ? '逆位' : '正位';
         
-        // 使用資料表欄位，格式化為要求的樣式
         const finalReadingText = 
         `${clickedCard.full_name_zh} / ${clickedCard.full_name_en}
         
@@ -197,8 +191,7 @@ async function handleCardClick(clickedCard) {
 
         // 寫入卡片 info 欄位 (顯示結果)
         clickedCard.info = finalReadingText; 
-        
-        // 嘗試儲存紀錄 (API記錄)
+
         await saveDivinationRecord(clickedCard, finalReadingText); 
         
         isReadingLoading.value = false;
@@ -209,15 +202,13 @@ async function handleCardClick(clickedCard) {
  * 執行洗牌和重置動作
  */
 function shuffleAndReset() {
-    // 重置所有卡片狀態，並確保它們是從 initialCardDeck 中複製出來的
     const resetData = initialCardDeck.value.map(card => ({
         ...card, 
         isDrawn: false,
         isFlipped: false,
     }));
     
-    // 確保 drawnCardId 是一個已定義的 ref
-    drawnCardId.value = null; // 解鎖牌堆
+    drawnCardId.value = null; 
     isReadingLoading.value = false;
     
     shuffledCards.value = shuffle(resetData);
@@ -253,16 +244,14 @@ const getCardZIndex = (index) => {
 // --- 生命週期鉤子 ---
 onMounted(async () => {
   authStore.checkAuth(); 
-    // 呼叫 API 抓取初始資料
     await fetchAllRuneData(); 
-
-    // 首次載入時，初始化牌組並洗牌 (只在資料載入成功時執行)
     if (allRuneData.value.length > 0) {
       initialCardDeck.value = select24RandomCards(allRuneData.value); 
       shuffleAndReset(); 
     }
 });
 </script>
+
 
 <template>
   <video autoplay muted loop id="runesone-background-video">
@@ -416,18 +405,18 @@ html, body {
     height: 100%;
     margin: 0;
     padding: 0;
-    overflow-x: hidden; /* 防止出現水平滾動條 */
+    overflow-x: hidden;
 }
 
 #runesone-background-video {
-    position: fixed; /* 固定在視窗上，不隨滾動條移動 */
+    position: fixed;
     top: 0;
     left: 0;
     min-width: 100%;
     min-height: 100%;
     width: auto;
     height: auto;
-    z-index: -100; /* 放在所有內容之下 */
+    z-index: -100;
     overflow: hidden;
     object-fit: cover; 
 }
@@ -566,7 +555,7 @@ html, body {
     width: 100%;
   }
 
-  /* --- Action Buttons 洗牌和回說明頁 動作按鈕 --- */
+  /* --- Action Buttons 洗牌和回說明頁動作按鈕 --- */
   .runesone-action-buttons {
     display: flex;
     flex-direction: column;
@@ -652,7 +641,7 @@ html, body {
     cursor: pointer;
 }
 
-/* 牌堆扇形展開效果 (透過 container 的 mouseenter/mouseleave 觸發) */
+/* 牌堆扇形展開效果 */
 .runesone-container:hover .runesone-card-wrapper {
     transform: rotate(calc(var(--i) * 1deg))
       translate(calc(var(--i) * 30px), -50px);
@@ -768,17 +757,16 @@ html, body {
 
 /* --- RWD --- */
 @media (max-width: 768px) {
-    /* 在小螢幕上，卡片垂直堆疊，資訊框移到卡片下方 */
     .runesone-card-wrapper.drawn {
-        transform: translate(0, -20px) scale(1.3) !important; /* 移回中央 */
+        transform: translate(0, -20px) scale(1.3) !important;
     }
 
     .runesone-info-box {
-        top: calc(var(--card-height) * 1.3 + 30px); /* 位於放大後卡片下方 30px 處 */
+        top: calc(var(--card-height) * 1.3 + 30px);
         left: 50%;
         transform: translateX(-50%);
-        width: calc(150px * 1.3); /* 資訊框寬度與卡片放大後一致 */
-        height: auto; /* 允許高度自適應 */
+        width: calc(150px * 1.3); 
+        height: auto; 
     }
 
     .runesone-card-wrapper.drawn.flipped .runesone-info-box {
@@ -787,13 +775,13 @@ html, body {
     }
 
     .runesone-container {
-        padding-bottom: 500px; /* 增加底部空間以容納資訊框 */
+        padding-bottom: 500px;
         margin-top: -300px; 
     }
 }
 
 
-/* --- Modal 相關樣式 (保留通用動畫) --- */
+/* --- Modal 相關樣式 --- */
 @keyframes fadeIn {
     from { opacity: 0; }
     to { opacity: 1; }

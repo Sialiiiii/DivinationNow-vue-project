@@ -1,6 +1,6 @@
 <script setup>
 import { defineProps, ref, computed, reactive } from 'vue';
-import axios from 'axios'; // ⭐ 必須引入 axios
+import axios from 'axios';
 
 const props = defineProps({
   records: {
@@ -9,54 +9,43 @@ const props = defineProps({
   }
 });
 
-// --- 展開/收起邏輯 (保持不變) ---
 const expandedId = ref(null);
-
 const toggleExpand = (recordId) => {
   expandedId.value = expandedId.value === recordId ? null : recordId;
 };
-
 const isExpanded = (recordId) => {
   return expandedId.value === recordId;
 };
 
 // --- 編輯功能狀態 ---
-// ⭐ 新增: 響應式狀態，追蹤正在編輯的紀錄 ID 和其問題內容
 const editingState = reactive({
-    id: null, // 當前正在編輯的 logId
-    question: '' // 當前編輯框中的問題文本
+    id: null,
+    question: ''
 });
 
 // --- 編輯功能方法 ---
-
-// ⭐ 新增方法: 啟動編輯模式
 const startEdit = (record) => {
     editingState.id = record.id;
     editingState.question = record.question;
 };
 
-// ⭐ 新增方法: 取消編輯
 const cancelEdit = () => {
     editingState.id = null;
     editingState.question = '';
 };
 
-// ⭐ 新增方法: 儲存問題到後端
 const saveQuestion = async (record) => {
-    // 檢查問題是否為空或未改變
     if (!editingState.question || editingState.question.trim() === record.question) {
         cancelEdit();
         return;
     }
     
     try {
-        // API 路徑為 PATCH /divination/history/{logId}
         const response = await axios.patch(`/api/divination/history/${record.id}`, {
             question: editingState.question.trim() 
         });
         
         if (response.status === 200) {
-            // 成功後，更新本地數據
             record.question = editingState.question.trim(); 
             alert('問題更新成功！');
         } else {
@@ -66,7 +55,7 @@ const saveQuestion = async (record) => {
         console.error('更新問題 API 失敗:', error);
         alert('更新問題時發生錯誤。');
     } finally {
-        cancelEdit(); // 退出編輯模式
+        cancelEdit();
     }
 };
 
@@ -75,14 +64,11 @@ const saveQuestion = async (record) => {
 const parsedDetails = computed(() => {
     if (!expandedId.value) return null;
     
-    // 找到當前展開的紀錄
     const record = props.records.find(r => r.id === expandedId.value);
     if (!record || !record.interpretation) return null;
     
-    // 使用分隔符號 '|||' 拆分內容 (六十甲子籤)
+    // 六十甲子籤
     const parts = record.interpretation.split('|||');
-    
-    // 檢查是否為六十甲子籤 (依賴後端使用 ||| 分隔，且占卜方式為中文)
     if (record.method === '六十甲子籤' && parts.length === 3) {
         return {
             isJiazi: true,
@@ -91,7 +77,7 @@ const parsedDetails = computed(() => {
             meaningDetail: parts[2].trim()
         };
     } 
-    // 處理盧恩符文 (假設盧恩是單個大文本，直接返回)
+    // 處理盧恩符文
     return { 
         isJiazi: false, 
         rawText: record.interpretation 
@@ -201,7 +187,6 @@ const parsedDetails = computed(() => {
   font-weight: 600;
 }
 
-/* --- 行交互與展開樣式 --- */
 .clickable-row {
   cursor: pointer;
   transition: background-color 0.2s;
@@ -210,15 +195,13 @@ const parsedDetails = computed(() => {
   background-color: #e9e9e9;
 }
 .expanded {
-  /* 展開時的背景色 */
   background-color: #fff3e0; 
 }
 
-/* --- 問題敘述欄位樣式 (Question) --- */
+/* --- 問題敘述欄位樣式--- */
 .question-column {
     min-width: 150px;
     max-width: 250px;
-    /* 讓問題欄位內容在單行顯示，超出部分用省略號 */
     white-space: nowrap; 
     overflow: hidden;
     text-overflow: ellipsis; 
@@ -242,7 +225,7 @@ const parsedDetails = computed(() => {
     font-size: 14px;
     margin-left: 5px;
     padding: 0 5px;
-    flex-shrink: 0; /* 防止按鈕被壓縮 */
+    flex-shrink: 0;
 }
 .edit-btn:hover {
     color: #0056b3;
@@ -280,21 +263,18 @@ const parsedDetails = computed(() => {
 }
 
 
-/* --- 核心解釋欄位樣式 (Interpretation Summary) --- */
+/* --- 核心解釋欄位樣式 --- */
 .interpretation-column {
   max-width: 350px;
-  /* 讓單行文本顯示，超出部分省略 */
   white-space: nowrap; 
   overflow: hidden;
   text-overflow: ellipsis; 
-  /* 設置彈性容器以便定位箭頭 */
   display: flex; 
   justify-content: space-between;
   align-items: center;
 }
 
 .summary-text {
-  /* 讓文本部分截斷 */
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -309,9 +289,9 @@ const parsedDetails = computed(() => {
   flex-shrink: 0;
 }
 
-/* --- 展開詳情行樣式 (Detail Row) --- */
+/* --- 展開詳情行樣式 --- */
 .detail-row td {
-  padding: 20px 40px; /* 增加左右邊距 */
+  padding: 20px 40px;
   background-color: #f8f8f8;
   border-left: none;
   border-right: none;
@@ -325,12 +305,11 @@ const parsedDetails = computed(() => {
   margin-bottom: 15px;
 }
 
-/* 結構化解說區塊樣式 */
 .detail-section {
   margin-bottom: 20px;
   padding: 15px;
   border-radius: 6px;
-  background-color: #ffffff; /* 白色卡片背景 */
+  background-color: #ffffff;
   box-shadow: 0 1px 3px rgba(0,0,0,0.05);
 }
 .detail-section h5 {
@@ -338,11 +317,11 @@ const parsedDetails = computed(() => {
   font-size: 1.1em;
   margin-top: 0;
   margin-bottom: 10px;
-  border-left: 3px solid #ff7e00; /* 橙色強調線 */
+  border-left: 3px solid #ff7e00;
   padding-left: 10px;
 }
 .detail-section p {
-  white-space: pre-wrap; /* 確保內容中的換行生效 */
+  white-space: pre-wrap;
   margin: 0;
   line-height: 1.8;
   color: #555;

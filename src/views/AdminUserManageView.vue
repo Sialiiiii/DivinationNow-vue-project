@@ -7,8 +7,6 @@ const router = useRouter();
 const route = useRoute();
 const users = ref([]);
 const isLoading = ref(true);
-
-// --- 彈窗相關狀態 ---
 const showModal = ref(false);
 const detailData = ref(null);
 
@@ -28,7 +26,6 @@ const fetchUsers = async () => {
     }
 };
 
-// 💡 點擊「封鎖中」標籤觸發
 const fetchBlacklistDetail = async (userId) => {
     try {
         const response = await axiosInstance.get(`/admin/blacklist/detail/${userId}`);
@@ -184,7 +181,6 @@ const handleToggleBlacklist = async (user) => {
     margin-bottom: 15px;
 }
 
-/* 表格樣式優化 */
 .table-wrapper {
     background: white;
     border-radius: 8px;
@@ -271,7 +267,7 @@ const handleToggleBlacklist = async (user) => {
     border-radius: 8px;
 }
 
-/* 💡 Modal 彈窗樣式 */
+/* 彈窗樣式 */
 .modal-overlay {
     position: fixed; 
     top: 0; 

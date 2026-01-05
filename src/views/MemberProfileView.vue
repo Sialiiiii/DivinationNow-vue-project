@@ -1,12 +1,9 @@
 <script setup>
-import { ref, onMounted, computed } from 'vue'; // ⭐ 新增 computed
+import { ref, onMounted, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import axios from 'axios';
 import { useAuthStore } from '@/stores/auth';
-
-// ⭐ 關鍵：確保引入所有的 API 服務，並避免與本地函數名衝突
 import { fetchMemberData as apiFetchMemberData, fetchAllStatuses, updateProfile } from '@/services/user.js';
-
 import UserProfileCard from '@/components/Member/UserProfileCard.vue';
 import DivinationHistoryTable from '@/components/Member/DivinationHistoryTable.vue';
 
@@ -17,22 +14,15 @@ const authStore = useAuthStore();
 // 用於儲存後端獲取的真實資料
 const userData = ref(null); 
 const historyRecords = ref([]); 
-// ⭐ 新增狀態數據儲存
 const allStatuses = ref([]); 
-
-// ⭐ 計算屬性：過濾出事業狀態 (供 UserProfileCard 使用)
 const careerStatuses = computed(() => {
-    // 過濾出 type 為 'Career' 的狀態
     return allStatuses.value.filter(s => s.type === 'Career');
 });
-
-// ⭐ 計算屬性：過濾出感情狀態 (供 UserProfileCard 使用)
 const relationshipStatuses = computed(() => {
-    // 過濾出 type 為 'Relationship' 的狀態
     return allStatuses.value.filter(s => s.type === 'Relationship');
 });
 
-// 創建專用的 axios 實例（避免污染全域）
+// 創建專用的 axios
 const apiClient = axios.create({
   baseURL: '/api',
   timeout: 10000,
@@ -40,7 +30,7 @@ const apiClient = axios.create({
 });
 
 
-// 響應攔截器：統一處理 401 錯誤
+// 響應攔截器，統一處理 401 錯誤
 apiClient.interceptors.response.use(
   (response) => response,
   (error) => {
@@ -54,11 +44,9 @@ apiClient.interceptors.response.use(
 
 // 登出與導航邏輯
 const handleLogout = () => {
-  // 🚀 關鍵修正 3: 不再手動操作 localStorage，只呼叫 Pinia Store 的 logout
   authStore.logout(); 
   console.log('User logged out, navigating to login.');
-  // 注意：authStore.logout() 內會執行 router.push('/')
-  router.push('/login'); // 由於您的 Store 內導向的是 /，這裡改為導向 /login
+  router.push('/login'); 
 };
 
 const toggleMenu = () => {
@@ -69,7 +57,7 @@ const resetToInstruction = () => {
   router.push('/'); 
 };
 
-// 漢堡選單導航方法 
+// 漢堡選單導航
 const goHome = () => { 
   isMenuOpen.value = false; 
   router.push('/'); 
@@ -99,26 +87,25 @@ const goSanctuary = () => {
     router.push('/sanctuary');
 }
 
-// 資料獲取：現已包含會員資料和狀態選項
-const loadMemberData = async () => { // ⭐ 重新命名為 loadMemberData 避免與 import 衝突
+// 資料獲取
+const loadMemberData = async () => {
   try {
-    // 1. 獲取用戶資料和歷史紀錄
+    // 獲取用戶資料和歷史紀錄
     const [userResponse, recordsResponse] = await Promise.all([
-      apiFetchMemberData(), // ⭐ 使用從 API 導入的 fetchMemberData
+      apiFetchMemberData(),
       apiClient.get('/divination/history')
     ]);
 
-    // 2. 獲取所有狀態選項
-    const statusResponse = await fetchAllStatuses(); // ⭐ 新增：獲取狀態選項
+    // 獲取所有狀態選項
+    const statusResponse = await fetchAllStatuses();
 
     // 更新前端狀態
-    userData.value = userResponse; // API 函數通常會返回 data，這裡假設它返回 data
-    allStatuses.value = statusResponse; // ⭐ 更新狀態選項
+    userData.value = userResponse;
+    allStatuses.value = statusResponse;
     historyRecords.value = recordsResponse.data.records || [];
     console.log('Member data loaded successfully.');
 
   } catch (error) {
-    // ... (錯誤處理保持不變)
     if (error.response?.status !== 401) {
       console.error('Error fetching member data:', error);
       alert(`載入會員資料失敗: ${error.message || '網路錯誤'}`);
@@ -126,33 +113,25 @@ const loadMemberData = async () => { // ⭐ 重新命名為 loadMemberData 避�
   }
 };
 
-// ⭐ 新增：處理 UserProfileCard 發來的更新請求
 const handleProfileUpdate = async (payload) => {
     try {
-        // 調用 API 服務發送 PATCH 請求
         const updatedUser = await updateProfile(payload);
-        
-        // 更新成功：用新的數據覆蓋現有數據，觸發子組件的 watch 進行更新
         userData.value = updatedUser;
         alert('會員資料更新成功！');
 
     } catch (error) {
         console.error('Failed to update user profile:', error);
         alert('更新會員資料失敗，請檢查輸入。');
-        // 實際應用中，您可能需要重新載入或回滾數據
-        // loadMemberData(); 
     }
 };
 
-// 處理子組件發出的更新事件
 const handleUpdateQuestion = async (updatedRecord) => {
   try {
-    // 使用專用的 axios 實例
+    // 使用專用的 axios 
     await apiClient.put(`/divination/history/${updatedRecord.id}`, {
       question: updatedRecord.question
     });
 
-    // 更新成功：同步更新前端的資料狀態
     const index = historyRecords.value.findIndex(r => r.id === updatedRecord.id);
     if (index !== -1) {
       historyRecords.value[index].question = updatedRecord.question;
@@ -167,7 +146,6 @@ const handleUpdateQuestion = async (updatedRecord) => {
       const message = error.response.data?.message || '更新占卜問題失敗';
       
       if (status === 401) {
-        // 401 錯誤已由攔截器處理
         return;
       } else {
         alert(`${message} (錯誤代碼: ${status})`);
@@ -182,7 +160,7 @@ const handleUpdateQuestion = async (updatedRecord) => {
 
 // 生命週期
 onMounted(() => {
-  loadMemberData(); // ⭐ 呼叫新的載入函數
+  loadMemberData();
 });
 </script>
 
@@ -284,10 +262,10 @@ onMounted(() => {
     height: 100%;
     margin: 0;
     padding: 0;
-    overflow-x: hidden; /* 防止出現水平滾動條 */
+    overflow-x: hidden;
   }
 
-  /* 背景影片樣式設定 */
+  /* 背景影片樣式 */
   #book-background-video {
     position: fixed;
     top: 0;  

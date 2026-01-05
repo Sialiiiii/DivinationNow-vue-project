@@ -14,15 +14,13 @@ const handleAdminLogin = async () => {
   isLoading.value = true;
 
   try {
-    // ⭐ 修正點 1：使用 URLSearchParams 將 JSON 物件轉換為 x-www-form-urlencoded 格式
     const loginData = new URLSearchParams();
-    loginData.append('email', username.value); // Spring Security 預期的參數名
-    loginData.append('password', password.value); // Spring Security 預期的參數名
+    loginData.append('email', username.value);
+    loginData.append('password', password.value); 
 
     const response = await axiosInstance.post('/auth/login', 
-      loginData, // ⭐ 傳送轉換後的數據
+      loginData,
       {
-        // ⭐ 修正點 2：覆蓋預設的 Content-Type，讓後端識別為表單數據
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded'
         }
@@ -36,7 +34,7 @@ const handleAdminLogin = async () => {
     }
   } catch (error) {
     isLoading.value = false;
-    // 處理登入失敗訊息
+    // 登入失敗訊息
     const message = error.response?.data?.message || '登入失敗，請檢查帳號和密碼。';
     errorMessage.value = message;
     console.error('Admin Login Error:', error);
@@ -76,18 +74,17 @@ const handleAdminLogin = async () => {
 </template>
 
 <style scoped>
-/* 這裡使用深色調，與管理員權限對應 */
 .admin-login-container {
   display: flex;
   justify-content: center;
   align-items: center;
   min-height: 100vh;
-  background-color: #36454F; /* 深灰色背景 */
+  background-color: #36454F;
   font-family: 'Microsoft JhengHei', sans-serif;
 }
 
 .login-card {
-  background-color: #2c3e50; /* 卡片深藍色 */
+  background-color: #2c3e50;
   color: white;
   padding: 40px;
   border-radius: 12px;
@@ -100,7 +97,7 @@ const handleAdminLogin = async () => {
 h2 {
   font-size: 1.8rem;
   margin-bottom: 10px;
-  color: #ffcc80; /* 突出的黃色 */
+  color: #ffcc80;
 }
 
 .login-tip {

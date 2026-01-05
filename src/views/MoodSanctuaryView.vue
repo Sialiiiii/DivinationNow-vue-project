@@ -6,9 +6,9 @@ import { useAuthStore } from '@/stores/auth';
 
 const router = useRouter()
 const authStore = useAuthStore();
-const posts = ref([]); // 儲存從後端載入的 PostDTO 列表
-const newPostContent = ref(''); // 用於發文的輸入框內容
-const isLoading = ref(true); // 載入狀態
+const posts = ref([]); 
+const newPostContent = ref('');
+const isLoading = ref(true);
 const isRulesExpanded = ref(false);
 const toggleRules = () => {
     isRulesExpanded.value = !isRulesExpanded.value;
@@ -22,9 +22,9 @@ const toggleRules = () => {
     isMenuOpen.value = !isMenuOpen.value;
   };
 
-  // --- 漢堡選單導航方法  ---
+  // --- 漢堡選單導航  ---
   const goHome = () => {
-      isMenuOpen.value = false; // 關閉選單
+      isMenuOpen.value = false;
       router.push('/');
   }
   const goBookOfAnswers = () => {
@@ -54,11 +54,9 @@ const toggleRules = () => {
 
 
 
-// 儲存當前用戶對每個貼文的 reactionType (用於局部更新點讚狀態)
+// 儲存當前用戶對每個貼文的 reactionType
 // Key: postId, Value: reactionType ("LOVE", "EMOTION", "FUNNY")
 const userReactions = reactive({});
-
-// 表情符號定義
 const reactions = [
   { type: 'LOVE', emoji: '💖' },
   { type: 'EMOTION', emoji: '🥹' },
@@ -77,14 +75,11 @@ onMounted(() => {
 const fetchPosts = async () => {
   isLoading.value = true;
   try {
-    // GET /api/posts
     const response = await axios.get('/api/posts');
     
-    // 清空舊的 userReactions 狀態
     Object.keys(userReactions).forEach(key => delete userReactions[key]);
 
     posts.value = response.data.map(post => {
-        // 根據後端返回的 userReactionType 設置初始狀態
         if (post.userReactionType) {
             userReactions[post.postId] = post.userReactionType;
         }
@@ -92,7 +87,6 @@ const fetchPosts = async () => {
     });
   } catch (error) {
     console.error('載入貼文失敗:', error);
-    // 可以在這裡設定一個錯誤狀態提示用戶
   } finally {
     isLoading.value = false;
   }
@@ -107,11 +101,10 @@ const submitPost = async () => {
   if (!authStore.isAuthenticated) return alert('請先登入才能發布貼文喔！');
 
   try {
-    // POST /api/posts
     await axios.post('/api/posts', { content });
     alert('貼文發布成功！');
     newPostContent.value = '';
-    await fetchPosts(); // 重新載入列表以顯示新貼文
+    await fetchPosts(); 
   } catch (error) {
     const message = error.response?.data?.message || '發布失敗，請檢查網路或是否被鎖定。';
     alert(`貼文發布失敗: ${message}`);
@@ -125,19 +118,18 @@ const handleReaction = async (post, reactionType) => {
   if (!authStore.isAuthenticated) return alert('請先登入才能按表情符號喔！');
   
   const postId = post.postId;
-  const currentReaction = userReactions[postId]; // 當前用戶對此貼文的反應
+  const currentReaction = userReactions[postId];
   
   try {
-    // PATCH /api/posts/{postId}/reaction
     const response = await axios.patch(`/api/posts/${postId}/reaction`, { reactionType });
-    const newCounts = response.data; // 獲取後端返回的最新計數
+    const newCounts = response.data;
     
-    // 1. 更新貼文計數
+    // 更新貼文計數
     post.loveCount = newCounts.loveCount;
     post.emotionCount = newCounts.emotionCount;
     post.funnyCount = newCounts.funnyCount;
     
-    // 2. 更新用戶點讚狀態 (userReactions)
+    // 更新用戶點讚狀態
     if (currentReaction === reactionType) {
       // 點擊相同的表情符號 -> 取消讚
       delete userReactions[postId];
@@ -334,19 +326,19 @@ const formatTime = (isoTime) => {
       height: 100%;
       margin: 0;
       padding: 0;
-      overflow-x: hidden; /* 防止出現水平滾動條 */
+      overflow-x: hidden;
   }
 
-  /* 背景影片樣式設定 */
+  /* 背景影片樣式 */
   #sanctuary-background-video {
-      position: fixed; /* 固定在視窗上，不隨滾動條移動 */
+      position: fixed;
       top: 0;
       left: 0;
       min-width: 100%;
       min-height: 100%;
       width: auto;
       height: auto;
-      z-index: -100; /* 放在所有內容之下 */
+      z-index: -100;
       overflow: hidden;
       object-fit: cover; 
   }
@@ -373,13 +365,13 @@ const formatTime = (isoTime) => {
 
 /* -------------------- 版規區塊樣式 -------------------- */
 .rules-section {
-    max-width: 900px; /* 限制寬度，讓文字更易讀 */
+    max-width: 900px;
     margin: 0 auto 40px;
-    background-color: rgba(255, 255, 255, 0.9); /* 略微透明的白底 */
-    backdrop-filter: blur(2px); /* 輕微背景模糊 */
+    background-color: rgba(255, 255, 255, 0.9);
+    backdrop-filter: blur(2px);
     border-radius: 10px;
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
-    overflow: hidden; /* 確保內容不溢出 */
+    overflow: hidden;
 }
 
 .rules-header {
@@ -387,7 +379,7 @@ const formatTime = (isoTime) => {
     justify-content: space-between;
     align-items: center;
     padding: 15px 25px;
-    background-color: #335d94; /* 樹洞主題色 */
+    background-color: #335d94;
     color: white;
     cursor: pointer;
     transition: background-color 0.3s;
@@ -407,7 +399,7 @@ const formatTime = (isoTime) => {
     font-size: 0.9rem;
     font-weight: bold;
     margin-left: 15px;
-    color: #ffcc80; /* 亮眼色，提醒可點擊 */
+    color: #ffcc80;
 }
 
 .rules-content {
@@ -415,11 +407,11 @@ const formatTime = (isoTime) => {
     line-height: 1.7;
     text-align: left;
     color: #333;
-    animation: fadeIn 0.4s ease-out; /* 展開時的動畫效果 */
+    animation: fadeIn 0.4s ease-out;
 }
 
 .rules-content h4 {
-    color: #007bff; /* 藍色標題 */
+    color: #007bff;
     margin-top: 20px;
     margin-bottom: 8px;
     padding-bottom: 3px;
@@ -435,8 +427,8 @@ const formatTime = (isoTime) => {
 
 .rules-content li {
     margin-bottom: 10px;
-    padding-left: 1.5em; /* 創造列表縮進 */
-    text-indent: -1.5em; /* 將圖標/符號拉回 */
+    padding-left: 1.5em; 
+    text-indent: -1.5em; 
 }
 
 .special-note {
@@ -450,7 +442,7 @@ const formatTime = (isoTime) => {
 }
 
 
-/* 1. 發布區塊樣式 */
+/* 發布區塊樣式 */
 .post-form-section {
     background-color: #f0f8ff;
     padding: 30px;
@@ -502,7 +494,7 @@ const formatTime = (isoTime) => {
     color: #333;
 }
 
-/* 2. 貼文列表樣式 */
+/* 貼文列表樣式 */
 .posts-list-section h2 {
     font-size: 1.8rem;
     border-bottom: 2px solid #eee;
@@ -560,13 +552,13 @@ const formatTime = (isoTime) => {
   color: #999;
 }
 
-/* 3. 互動區塊樣式 */
+/* 互動區塊樣式 */
 .post-reactions {
     display: flex;
     gap: 15px;
     padding-top: 10px;
     border-top: 1px solid #eee;
-    flex-wrap: wrap; /* RWD 友善 */
+    flex-wrap: wrap;
 }
 
 .reaction-btn {
@@ -585,7 +577,7 @@ const formatTime = (isoTime) => {
 }
 
 .reaction-btn.active {
-    background-color: #a3ccff; /* 點擊後的背景色 */
+    background-color: #a3ccff;
     color: #1a1a2e;
     font-weight: bold;
     transform: scale(1.05);

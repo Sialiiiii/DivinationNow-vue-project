@@ -21,7 +21,7 @@
 
   // --- 漢堡選單導航方法  ---
   const goHome = () => {
-      isMenuOpen.value = false; // 關閉選單
+      isMenuOpen.value = false;
       router.push('/');
   }
   const goBookOfAnswers = () => {
@@ -51,10 +51,10 @@
 
 
   // 狀態管理
-  const hasStarted = ref(false); // 控制顯示說明還是結果
-  const currentAnswer = ref(''); // 儲存當前的占卜結果
-  const isLoading = ref(false); // 控制等待效果
-  const isDataLoading = ref(true); // 新增：用於表示答案資料是否正在載入
+  const hasStarted = ref(false); 
+  const currentAnswer = ref(''); 
+  const isLoading = ref(false); 
+  const isDataLoading = ref(true);
 
   /**
    * 從 API 抓取解答之書的答案列表
@@ -62,18 +62,15 @@
   const fetchAnswers = async () => {
     isDataLoading.value = true;
     try {
-      // 假設 getBookAnswers 呼叫您的後端並返回圖片中結構的陣列
       const response = await getBookAnswers(); 
-      allAnswers.value = response; // 儲存整個答案物件陣列
+      allAnswers.value = response; 
     } catch (error) {
       console.error("Error fetching book answers:", error);
-      // 可以在這裡處理錯誤，例如顯示錯誤訊息給使用者
     } finally {
         isDataLoading.value = false;
     }
   };
 
-  // 在元件掛載後執行抓取資料
   onMounted(() => {
     fetchAnswers();
   });
@@ -84,18 +81,17 @@
  * */
   const getRandomAnswer = () => {
     if (allAnswers.value.length === 0) {
-      return "抱歉，目前無法取得答案。"; // 處理資料為空的情況
+      return "抱歉，目前無法取得答案。";
     }
     // 從 allAnswers 中隨機選取一個答案物件
     const randomIndex = Math.floor(Math.random() * allAnswers.value.length);
-    // 根據圖片中的資料庫欄位，取得 answer_content
     return allAnswers.value[randomIndex].answer_content; 
   };
 
 
 
   /**
-   * 開始占卜的邏輯：切換畫面並產生結果
+   * 開始占卜的邏輯，切換畫面並產生結果
    */
   const startFortune = () => {
     hasStarted.value = true;
@@ -103,17 +99,16 @@
   };
 
   /**
-   * 產生結果並帶有短暫的等待動畫 (模擬翻書)
+   * 產生結果 + 短暫的等待動畫
    */
   const generateResult = () => {
-    isLoading.value = true; // 開始等待動畫
-    currentAnswer.value = ''; // 清空舊結果
+    isLoading.value = true;
+    currentAnswer.value = '';
 
-    // 設置一個短暫的延遲，模擬翻書的過程
     setTimeout(() => {
       currentAnswer.value = getRandomAnswer();
       isLoading.value = false;
-    }, 1000); // 延遲1秒
+    }, 1000); 
   };
 
   /**
@@ -279,19 +274,19 @@
       height: 100%;
       margin: 0;
       padding: 0;
-      overflow-x: hidden; /* 防止出現水平滾動條 */
+      overflow-x: hidden;
   }
 
-  /* 背景影片樣式設定 */
+  /* 背景影片樣式 */
   #book-background-video {
-      position: fixed; /* 固定在視窗上，不隨滾動條移動 */
+      position: fixed; 
       top: 0;
       left: 0;
       min-width: 100%;
       min-height: 100%;
       width: auto;
       height: auto;
-      z-index: -100; /* 放在所有內容之下 */
+      z-index: -100;
       overflow: hidden;
       object-fit: cover; 
   }
@@ -393,10 +388,8 @@
     margin-top: 20px;
   }
 
-  /* 用於顯示答案資料載入中的區塊，與 book-card 共用基礎樣式 */
   .book-loading-data {
-    /* 沿用 book-card 的外觀，但可以增加一些載入中的視覺提示 */
-    min-height: 200px; /* 確保內容顯示時有足夠空間 */
+    min-height: 200px;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -405,13 +398,12 @@
     padding: 40px;
   }
 
-  /* 確保載入中的標題清晰 */
   .book-loading-data .book-card-title {
     color: #555;
     margin-bottom: 10px;
   }
 
-  /* 脈衝動畫 (Pulse Animation) */
+  /* 脈衝動畫 */
   @keyframes pulse {
     0% {
       opacity: 0.6;
@@ -427,11 +419,11 @@
   .book-fortune-result {
     font-size: 28px;
     font-weight: bold;
-    color: #000; /* 原主按鈕顏色 */
+    color: #000;
     animation: fadeIn 1s;
   }
 
-  /* --- Action Buttons 動作按鈕 --- */
+  /* --- 動作按鈕 --- */
   .book-action-buttons {
     margin-top: 40px;
     display: flex;
@@ -457,7 +449,7 @@
     transition: transform 0.2s, opacity 0.2s;
     text-decoration: none;
     text-align: center;
-    background-color: #000; /* 黑色主按鈕 */
+    background-color: #000;
     color: #fff;
   }
 
@@ -512,11 +504,10 @@
       box-sizing: border-box; 
     }
     
-    /* 按鈕寬度統一調整 */
     .book-btn-back, 
     .book-btn-primary {
       width: 90% !important; 
-      max-width: 320px !important; /* 設定一個合理的按鈕最大寬度 */
+      max-width: 320px !important; 
       padding: 12px 20px !important;
     }
 

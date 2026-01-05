@@ -253,8 +253,8 @@ onMounted(() => {
 
         <div class="fortunestick-pai-display" :class="{ 'has-result': paiResult }">
           <div class="fortunestick-pai-image-wrapper">
-            <img src="/src/assets/images/moonblocks.png" alt="筊杯" class="fortunestick-pai-image">
-            <img src="/src/assets/images/moonblocks.png" alt="筊杯" class="fortunestick-pai-image">
+            <img src="/src/assets/images/moonblocks1.png" alt="筊杯" class="fortunestick-pai-image">
+            <img src="/src/assets/images/moonblocks2.png" alt="筊杯" class="fortunestick-pai-image">
           </div>
 
           <div v-if="paiResult" class="fortunestick-result-message" :class="paiResult">
@@ -451,7 +451,7 @@ onMounted(() => {
         font-weight: 500;
         cursor: pointer;
         transition: transform 0.2s, opacity 0.2s;
-        background: linear-gradient(to right, #a0522d, #d2691e); /* 廟宇的金棕色系 */
+        background: linear-gradient(to right, #a0522d, #d2691e);
         color: #fff;
         box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
     }

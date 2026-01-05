@@ -173,8 +173,6 @@ function goadmin() {
 
 <style scoped>
 @import '/src/assets/styles/shared.css';
-
-/* -------------------- 容器與基礎設定 -------------------- */
 #app-container {
 display: flex; 
   flex-direction: column; 
@@ -184,7 +182,7 @@ display: flex;
   width: 100%;
 }
 
-/* -------------------- 1. 頂部 Banner 區塊 -------------------- */
+/* -------------------- 頂部 Banner 區塊 -------------------- */
 .banner {
   background-color: white;
   /* padding-bottom: 30px; */
@@ -193,7 +191,7 @@ display: flex;
   display: flex;
   flex-wrap: wrap;
   justify-content: space-between; 
-  align-items: flex-start; /* 讓標題和按鈕區塊從頂部對齊 */
+  align-items: flex-start; 
 
 }
 
@@ -351,16 +349,16 @@ display: flex;
 }
 
 
-/* -------------------- 占卜紀錄分享展示區塊 -------------------- */
+/* -------------------- 展示區塊(沒用到，暫留) -------------------- */
 .sanctuary-section {
     margin: 80px 80px; 
     padding: 60px 30px; 
-    background: linear-gradient(135deg, #c0c0eb 0%, #293241 100%); /* ⭐ 深色漸變背景 */
-    border-radius: 20px; /* 圓角更大 */
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4); /* ⭐ 更深的陰影 */
+    background: linear-gradient(135deg, #c0c0eb 0%, #293241 100%);
+    border-radius: 20px; 
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
     display: flex;
     flex-direction: column;
-    align-items: center; /* 內容置中 */
+    align-items: center; 
     text-align: center;
     position: relative;
     overflow: hidden;
@@ -369,34 +367,33 @@ display: flex;
 .message-board-header {
     margin-bottom: 30px;
     text-align: center;
-    z-index: 2; /* 確保文字在最上層 */
+    z-index: 2;
 }
 
 .message-board-header .title-section {
-    /* 確保標題區塊正確顯示 */
     display: inline-block;
 }
 
-.sanctuary-h1 { /* ⭐ 新標題樣式 */
+.sanctuary-h1 {
     font-size: 3.5rem;
     font-weight: 900;
-    color: #e0f7fa; /* 淺藍色文字 */
+    color: #e0f7fa;
     line-height: 1.2;
     margin-bottom: 15px;
     letter-spacing: 0.1em;
-    text-shadow: 0 0 10px rgba(163, 204, 255, 0.7); /* 柔和發光效果 */
+    text-shadow: 0 0 10px rgba(163, 204, 255, 0.7);
 }
 
 .sanctuary-subtitle{
     font-size: 1.2rem;
-    color: #dce4ef; /* 柔和藍灰色 */
+    color: #dce4ef;
     margin-bottom: 40px;
     line-height: 1.8;
     max-width: 900px;
 }
 
 .sanctuary-btn {
-    background-color: #ffcc80; /* 溫暖的橙色調 */
+    background-color: #ffcc80; 
     color: #1a1a2e;
     font-size: 1.2rem;
     font-weight: bold;
@@ -494,7 +491,6 @@ display: flex;
 /* ============================== RWD ============================== */
 
 @media (max-width: 1200px) {
-/* 調整整體邊距 */
   .main-title {
     font-size: 4rem;
     padding: 20px 40px 0;
@@ -504,7 +500,6 @@ display: flex;
     padding: 0 40px;
   }
 
-  /* 包裹按鈕和提示文字的容器 */
   .auth-content {
     display: flex;
     flex-direction: column;
@@ -516,19 +511,17 @@ display: flex;
   .auth-login-content{
   padding: 20px 10px 0 0; 
 }
-  /* 針對登入/註冊按鈕區塊的修正 */
+
     .auth-section-wrapper {
         top: 0px;
         right: 40px;
         margin-bottom: 30px;
     }
 
-  /* 調整內容區塊的圖片和文字寬度 */
   .main-content {
     margin: 60px 40px;
   }
 
-  /* 調整文字大小 */
   .title-section h1 {
     font-size: 2.5rem;
   }
@@ -538,7 +531,6 @@ display: flex;
     margin-bottom: 30px;
   }
 
-  /* 調整圖片和文字容器間距 */
   .text-content {
     padding-right: 30px;
     flex: 1;
@@ -549,7 +541,6 @@ display: flex;
     padding-left: 30px; 
   }
 
-  /* 調整圖片大小 */
   .image-placeholder-bottom {
     width: 400px; 
     height: 300px;
@@ -562,7 +553,6 @@ display: flex;
     font-size: 3rem 
   }
 
-  /* 調整 Footer 置中寬度 */
   .footer-content {
     max-width: 960px;
     padding: 0 40px 40px;
@@ -633,15 +623,12 @@ display: flex;
     right: 20px;
     padding: 0;
   }
-
-  /* 內容區塊垂直堆疊 */
   .main-content {
     flex-direction: column; 
     margin: 30px 20px;
     align-items: center;
   }
 
-  /* 調整圖片和文字區塊的寬度 */
   .text-content {
     width: 100%;
     max-width: 100%;
@@ -677,7 +664,6 @@ display: flex;
     margin-bottom: 30px;
   }
 
-  /* 交錯內容區塊的順序 */
   .main-content.reverse-content {
     flex-direction: column; 
   }
@@ -691,7 +677,7 @@ display: flex;
     margin-right: 0; 
   }
 
-  .sanctuary-section { /* ⭐ RWD 樣式 */
+  .sanctuary-section {
       margin: 30px 20px; 
       padding: 40px 20px;
   }

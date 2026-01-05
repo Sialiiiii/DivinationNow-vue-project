@@ -160,10 +160,10 @@ const formatTime = (isoTime) => {
 .dashboard-header {
   display: flex;
   justify-content: space-between;
-  align-items: flex-end; /* 對齊底端讓標籤貼合分隔線 */
+  align-items: flex-end;
   margin-bottom: 30px;
   border-bottom: 3px solid #36454F;
-  padding-bottom: 0; /* 讓 Tabs 貼在線上面 */
+  padding-bottom: 0;
 }
 
 .header-left {
@@ -178,7 +178,6 @@ const formatTime = (isoTime) => {
   margin: 0;
 }
 
-/* 💡 導航標籤樣式 */
 .admin-tabs {
   display: flex;
   gap: 5px;
@@ -190,7 +189,7 @@ const formatTime = (isoTime) => {
   background-color: #e0e0e0;
   color: #666;
   cursor: pointer;
-  border-radius: 8px 8px 0 0; /* 上圓角 */
+  border-radius: 8px 8px 0 0;
   font-size: 1rem;
   font-weight: bold;
   transition: all 0.3s;
@@ -205,7 +204,7 @@ const formatTime = (isoTime) => {
   color: white;
 }
 
-/* 登出按鈕 - 稍微往上調一點點免得被擋住 */
+/* 登出按鈕 */
 .logout-btn {
   background-color: #f44336;
   color: white;
@@ -221,7 +220,6 @@ const formatTime = (isoTime) => {
   background-color: #d32f2f;
 }
 
-/* ... 以下維持原本的 CSS 不變 ... */
 .loading-state, .error-panel {
   text-align: center;
   padding: 50px;

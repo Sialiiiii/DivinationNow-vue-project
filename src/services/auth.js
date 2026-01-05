@@ -17,16 +17,12 @@ export const register = async (userData) => {
 };
 
 /**
- * [POST] 處理會員登入 (Session 模式)
+ * [POST] 處理會員登入
  */
 export const login = async (email, password) => {
     try {
         const payload = { email, password }; 
-
-        // 🚀 關鍵修正 1: 將 JSON 物件轉換為 application/x-www-form-urlencoded 格式
         const formData = qs.stringify(payload);
-        
-        // 🚀 關鍵修正 2: 設置 Content-Type 為 Form Data 類型
         const config = {
             headers: {
                 'Content-Type': 'application/x-www-form-urlencoded'
